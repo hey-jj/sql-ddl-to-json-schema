@@ -7,7 +7,11 @@ use crate::grammar::parse_statement;
 use crate::json_schema;
 
 /// Error returned by parser operations.
-#[derive(Debug, Clone)]
+///
+/// Marked `#[non_exhaustive]` so new variants can be added without a breaking
+/// change. Match arms on this type must include a wildcard.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Error {
     /// An unsupported SQL dialect was given to the constructor.
     UnsupportedDialect(String),
@@ -35,7 +39,7 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// Options for JSON Schema output.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct JsonSchemaOptions {
     /// Whether to keep column schemas under `definitions` and reference them
     /// with `$ref`. When false, schemas are flattened into `properties`.

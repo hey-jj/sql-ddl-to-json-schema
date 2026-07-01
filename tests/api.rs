@@ -12,12 +12,12 @@ const SAMPLE: &str =
 
 #[test]
 fn unsupported_dialect_errors() {
-    match Parser::new("postgres") {
-        Err(Error::UnsupportedDialect(d)) => assert_eq!(d, "postgres"),
-        other => panic!("expected UnsupportedDialect, got {:?}", other.map(|_| ())),
-    }
+    // Error implements PartialEq, so the whole value compares by equality.
+    let err = Parser::new("postgres").err().unwrap();
+    assert_eq!(err, Error::UnsupportedDialect("postgres".into()));
+
     // The message matches the documented text.
-    let msg = Parser::new("postgres").err().unwrap().to_string();
+    let msg = err.to_string();
     assert!(msg.contains("Unsupported SQL dialect given to parser: 'postgres."));
     assert!(msg.contains("Please provide 'mysql', 'mariadb' or none to use default."));
 }
@@ -46,6 +46,12 @@ fn mysql_equals_mariadb_output() {
 
 #[test]
 fn default_options_equal_ref_true() {
+    // JsonSchemaOptions implements PartialEq. The default is use_ref: true.
+    assert_eq!(
+        JsonSchemaOptions::default(),
+        JsonSchemaOptions { use_ref: true }
+    );
+
     let with_default = {
         let mut p = Parser::new("mysql").unwrap();
         p.feed(SAMPLE);
