@@ -1,9 +1,11 @@
-//! Public API tests beyond the golden corpus: dialect handling, argument
-//! overloads, streaming, and datatype mapping edges.
+//! Public API tests beyond the golden corpus: dialect handling, draining
+//! methods versus free functions, streaming, error lines, and datatype edges.
 
 use serde_json::{json, Value};
 
-use sql_ddl_to_json_schema::{Error, JsonSchemaOptions, Parser};
+use sql_ddl_to_json_schema::{
+    compact_from_tree, json_schema_from_tables, Error, JsonSchemaOptions, Parser,
+};
 
 const SAMPLE: &str =
     "CREATE TABLE t (id INT NOT NULL AUTO_INCREMENT, name VARCHAR(30), PRIMARY KEY (id));";
@@ -32,12 +34,12 @@ fn mysql_equals_mariadb_output() {
     let compact_mysql = {
         let mut p = Parser::new("mysql").unwrap();
         p.feed(SAMPLE);
-        p.to_compact_json(None).unwrap()
+        p.parse_compact().unwrap()
     };
     let compact_mariadb = {
         let mut p = Parser::new("mariadb").unwrap();
         p.feed(SAMPLE);
-        p.to_compact_json(None).unwrap()
+        p.parse_compact().unwrap()
     };
     assert_eq!(compact_mysql, compact_mariadb);
 }
@@ -47,45 +49,45 @@ fn default_options_equal_ref_true() {
     let with_default = {
         let mut p = Parser::new("mysql").unwrap();
         p.feed(SAMPLE);
-        p.to_json_schema_array(None, None).unwrap()
+        p.parse_json_schema(JsonSchemaOptions::default()).unwrap()
     };
     let with_ref_true = {
         let mut p = Parser::new("mysql").unwrap();
         p.feed(SAMPLE);
-        p.to_json_schema_array(Some(JsonSchemaOptions { use_ref: true }), None)
+        p.parse_json_schema(JsonSchemaOptions { use_ref: true })
             .unwrap()
     };
     assert_eq!(with_default, with_ref_true);
 }
 
 #[test]
-fn explicit_argument_overloads_match_implicit() {
-    // to_compact_json(Some(tree)) equals to_compact_json(None).
-    let (implicit_compact, explicit_compact) = {
+fn free_functions_match_draining_methods() {
+    // compact_from_tree(&tree) equals parse_compact() for the same input.
+    let (draining_compact, from_tree_compact) = {
         let mut p = Parser::new("mysql").unwrap();
         p.feed(SAMPLE);
-        let tree = p.results().unwrap();
-        let explicit = p.to_compact_json(Some(tree)).unwrap();
+        let tree = p.parse().unwrap();
+        let from_tree = compact_from_tree(&tree).unwrap();
 
         let mut q = Parser::new("mysql").unwrap();
         q.feed(SAMPLE);
-        let implicit = q.to_compact_json(None).unwrap();
-        (implicit, explicit)
+        let draining = q.parse_compact().unwrap();
+        (draining, from_tree)
     };
-    assert_eq!(implicit_compact, explicit_compact);
+    assert_eq!(draining_compact, from_tree_compact);
 
-    // to_json_schema_array(opts, Some(tables)) equals the implicit form.
+    // json_schema_from_tables(&tables, opts) equals parse_json_schema(opts).
     let mut p = Parser::new("mysql").unwrap();
     p.feed(SAMPLE);
-    let tables = p.to_compact_json(None).unwrap();
-    let explicit_schema = p
-        .to_json_schema_array(Some(JsonSchemaOptions { use_ref: true }), Some(tables))
-        .unwrap();
+    let tables = p.parse_compact().unwrap();
+    let from_tables = json_schema_from_tables(&tables, JsonSchemaOptions { use_ref: true });
 
     let mut q = Parser::new("mysql").unwrap();
     q.feed(SAMPLE);
-    let implicit_schema = q.to_json_schema_array(None, None).unwrap();
-    assert_eq!(explicit_schema, implicit_schema);
+    let draining = q
+        .parse_json_schema(JsonSchemaOptions { use_ref: true })
+        .unwrap();
+    assert_eq!(from_tables, draining);
 }
 
 #[test]
@@ -93,17 +95,17 @@ fn empty_and_whitespace_feed_produce_empty_output() {
     for input in ["", "   ", "\n\t  \n"] {
         let mut p = Parser::new("mysql").unwrap();
         p.feed(input);
-        let results = p.results().unwrap();
+        let results = p.parse().unwrap();
         assert_eq!(results, json!({ "id": "MAIN", "def": [] }));
 
         let mut p = Parser::new("mysql").unwrap();
         p.feed(input);
-        assert_eq!(p.to_compact_json(None).unwrap(), Vec::<Value>::new());
+        assert_eq!(p.parse_compact().unwrap(), Vec::<Value>::new());
 
         let mut p = Parser::new("mysql").unwrap();
         p.feed(input);
         assert_eq!(
-            p.to_json_schema_array(None, None).unwrap(),
+            p.parse_json_schema(JsonSchemaOptions::default()).unwrap(),
             Vec::<Value>::new()
         );
     }
@@ -114,7 +116,7 @@ fn multi_chunk_feed_equals_whole() {
     let whole = {
         let mut p = Parser::new("mysql").unwrap();
         p.feed(SAMPLE);
-        p.results().unwrap()
+        p.parse().unwrap()
     };
     // Feed in arbitrary chunks.
     let chunked = {
@@ -126,18 +128,25 @@ fn multi_chunk_feed_equals_whole() {
             p.feed(std::str::from_utf8(&bytes[i..end]).unwrap());
             i = end;
         }
-        p.results().unwrap()
+        p.parse().unwrap()
     };
     assert_eq!(whole, chunked);
 }
 
 #[test]
 fn parse_error_reports_line_number() {
+    // The failing token `TEST` sits on line 3. The message names that line, not
+    // the statement's first line.
     let mut p = Parser::new("mysql").unwrap();
     p.feed("CREATE\nTABLE\nTEST;");
-    let err = p.results().unwrap_err().to_string();
-    // The message carries a line number in stream coordinates.
-    assert!(err.contains("line"));
+    let err = p.parse().unwrap_err().to_string();
+    assert_eq!(err, "invalid syntax at line 3");
+
+    // A single statement whose error is on a later line reports that line.
+    let mut p = Parser::new("mysql").unwrap();
+    p.feed("CREATE TABLE t (\n a INT,\n b INT,\n @@@ );");
+    let err = p.parse().unwrap_err().to_string();
+    assert_eq!(err, "invalid syntax at line 4");
 }
 
 #[test]
@@ -204,10 +213,9 @@ fn decimal_and_float_maximum_use_string_method() {
 #[test]
 fn compact_formatter_rejects_non_main_root() {
     // A tree whose root id is not "MAIN" must be rejected with the documented
-    // message. This is the only throw path in the compact formatter.
-    let mut p = Parser::new("mysql").unwrap();
+    // message. This is the only error path in the compact formatter.
     let bad = json!({ "id": "P_DDS", "def": [] });
-    let err = p.to_compact_json(Some(bad)).unwrap_err();
+    let err = compact_from_tree(&bad).unwrap_err();
     assert!(matches!(err, Error::Format(_)), "got {:?}", err);
     assert_eq!(
         err.to_string(),
@@ -217,30 +225,23 @@ fn compact_formatter_rejects_non_main_root() {
 }
 
 #[test]
-fn preparser_splits_on_utf16_code_units() {
-    // Statement splitting counts UTF-16 code units. An astral char (2 units)
-    // before a semicolon must not derail the split, and the char must survive
-    // into the parse tree.
-    let mut p = Parser::new("mysql").unwrap();
-    p.feed("USE \u{1F600};USE b;");
-    assert_eq!(p.statement_count(), 2);
-
-    // Astral char inside a string default round-trips through parse and compact.
+fn astral_char_round_trips_through_compact() {
+    // An astral char (2 UTF-16 units) inside a string default must survive the
+    // statement split and land unchanged in the compact model. The split-count
+    // check lives in the parser unit tests where the fields are reachable.
     let mut q = Parser::new("mysql").unwrap();
     q.feed("CREATE TABLE t (c VARCHAR(10) DEFAULT '\u{1F600}');");
-    let tables = q.to_compact_json(None).unwrap();
+    let tables = q.parse_compact().unwrap();
     assert_eq!(
         tables[0]["columns"][0]["options"]["default"],
         json!("\u{1F600}")
     );
 }
 
-// Parse errors carry a line number in stream coordinates. The number must be
-// the line of the token where parsing broke, not the line of the statement's
-// first token. See tracking issue: error line resolution pins to the statement
-// start. Enable once the grammar reports the furthest-reached token line.
+// Parse errors carry a line number in stream coordinates. The number is the
+// line of the token where parsing broke, not the line of the statement's first
+// token. The grammar tracks the furthest-reached token for this.
 #[test]
-#[ignore = "known divergence: error line reports statement-start, not failure token"]
 fn parse_error_line_matches_stream_coordinates() {
     let cases: &[(&[&str], i64)] = &[
         (
@@ -258,7 +259,7 @@ fn parse_error_line_matches_stream_coordinates() {
         for c in *chunks {
             p.feed(c);
         }
-        let msg = p.results().unwrap_err().to_string();
+        let msg = p.parse().unwrap_err().to_string();
         let got: i64 = msg
             .chars()
             .skip_while(|c| !c.is_ascii_digit())
@@ -274,6 +275,6 @@ fn parse_error_line_matches_stream_coordinates() {
 fn schema_for_column(ddl: &str) -> Value {
     let mut p = Parser::new("mysql").unwrap();
     p.feed(ddl);
-    let schemas = p.to_json_schema_array(None, None).unwrap();
+    let schemas = p.parse_json_schema(JsonSchemaOptions::default()).unwrap();
     schemas[0]["definitions"]["c"].clone()
 }

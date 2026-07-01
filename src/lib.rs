@@ -3,9 +3,13 @@
 //! Feed SQL Data Definition statements into a [`Parser`], then read one of
 //! three outputs:
 //!
-//! - the parse tree, via [`Parser::results`]
-//! - the compact table model, via [`Parser::to_compact_json`]
-//! - JSON Schema draft-07 documents, via [`Parser::to_json_schema_array`]
+//! - the parse tree, via [`Parser::parse`]
+//! - the compact table model, via [`Parser::parse_compact`]
+//! - JSON Schema draft-07 documents, via [`Parser::parse_json_schema`]
+//!
+//! Each of these drains the buffered statements. To reformat a tree you already
+//! hold, use the free functions [`compact_from_tree`] and
+//! [`json_schema_from_tables`].
 //!
 //! Only DDL is supported. `SET` parses but is ignored. Database statements
 //! (`USE`, `CREATE DATABASE`, `ALTER DATABASE`, `DROP DATABASE`) parse but do
@@ -24,7 +28,7 @@
 //!
 //! let mut parser = Parser::new("mysql").unwrap();
 //! parser.feed(ddl);
-//! let schemas = parser.to_json_schema_array(None, None).unwrap();
+//! let schemas = parser.parse_json_schema(Default::default()).unwrap();
 //! assert_eq!(schemas[0]["$id"], "users");
 //! ```
 #![forbid(unsafe_code)]
@@ -37,4 +41,4 @@ mod keywords;
 mod lexer;
 mod parser;
 
-pub use parser::{Error, JsonSchemaOptions, Parser};
+pub use parser::{compact_from_tree, json_schema_from_tables, Error, JsonSchemaOptions, Parser};

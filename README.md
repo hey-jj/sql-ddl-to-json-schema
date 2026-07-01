@@ -6,9 +6,12 @@ documents.
 Feed one or more SQL Data Definition statements into a `Parser`, then read one
 of three outputs:
 
-- the parse tree, via `results`
-- the compact table model, via `to_compact_json`
-- JSON Schema draft-07 documents, one per table, via `to_json_schema_array`
+- the parse tree, via `parse`
+- the compact table model, via `parse_compact`
+- JSON Schema draft-07 documents, one per table, via `parse_json_schema`
+
+Each of these drains the buffered statements. To reformat a tree you already
+hold, use the free functions `compact_from_tree` and `json_schema_from_tables`.
 
 Statements replay against an in-memory database, so `ALTER TABLE`, `CREATE
 INDEX`, `DROP TABLE`, `RENAME TABLE`, and `CREATE TABLE ... LIKE` all mutate the
@@ -38,7 +41,7 @@ let ddl = "CREATE TABLE users (id INT NOT NULL AUTO_INCREMENT, \
 let mut parser = Parser::new("mysql").unwrap();
 parser.feed(ddl);
 
-let tables = parser.to_compact_json(None).unwrap();
+let tables = parser.parse_compact().unwrap();
 assert_eq!(tables[0]["name"], "users");
 ```
 
@@ -51,13 +54,13 @@ let mut parser = Parser::new("mysql").unwrap();
 parser.feed("CREATE TABLE t (id INT PRIMARY KEY, name VARCHAR(30));");
 
 // Default keeps column schemas under `definitions` with `$ref`.
-let with_ref = parser.to_json_schema_array(None, None).unwrap();
+let with_ref = parser.parse_json_schema(JsonSchemaOptions::default()).unwrap();
 
 // Flatten column schemas into `properties`.
 let mut parser = Parser::new("mysql").unwrap();
 parser.feed("CREATE TABLE t (id INT PRIMARY KEY, name VARCHAR(30));");
 let flattened = parser
-    .to_json_schema_array(Some(JsonSchemaOptions { use_ref: false }), None)
+    .parse_json_schema(JsonSchemaOptions { use_ref: false })
     .unwrap();
 ```
 
@@ -72,7 +75,7 @@ use sql_ddl_to_json_schema::Parser;
 let mut parser = Parser::new("mysql").unwrap();
 parser.feed("CREATE TABLE ");
 parser.feed("t (id INT);");
-let tables = parser.to_compact_json(None).unwrap();
+let tables = parser.parse_compact().unwrap();
 assert_eq!(tables[0]["name"], "t");
 ```
 

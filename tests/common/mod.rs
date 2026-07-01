@@ -54,14 +54,14 @@ pub fn load_goldens(group: &str) -> Vec<Golden> {
 pub fn run_parsed(query: &str) -> Result<Value, String> {
     let mut p = Parser::new("mysql").unwrap();
     p.feed(query);
-    p.results().map_err(|e| e.to_string())
+    p.parse().map_err(|e| e.to_string())
 }
 
 /// Run a query through the compact handler.
 pub fn run_compact(query: &str) -> Result<Value, String> {
     let mut p = Parser::new("mysql").unwrap();
     p.feed(query);
-    p.to_compact_json(None)
+    p.parse_compact()
         .map(Value::Array)
         .map_err(|e| e.to_string())
 }
@@ -72,7 +72,7 @@ pub fn run_json_schema(query: &str, use_ref: bool) -> Value {
     p.feed(query);
     let opts = JsonSchemaOptions { use_ref };
     Value::Array(
-        p.to_json_schema_array(Some(opts), None)
+        p.parse_json_schema(opts)
             .expect("json schema should succeed"),
     )
 }

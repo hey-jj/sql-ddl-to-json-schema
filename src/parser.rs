@@ -58,7 +58,7 @@ impl Default for JsonSchemaOptions {
 ///
 /// let mut parser = Parser::new("mysql").unwrap();
 /// parser.feed("CREATE TABLE t (id INT PRIMARY KEY);");
-/// let tables = parser.to_compact_json(None).unwrap();
+/// let tables = parser.parse_compact().unwrap();
 /// assert_eq!(tables[0]["name"], "t");
 /// ```
 pub struct Parser {
@@ -87,7 +87,7 @@ impl Parser {
     }
 
     /// Feed a chunk of SQL. Splits input into statements at unquoted, unescaped
-    /// semicolons and keeps cross-chunk state. Chainable.
+    /// semicolons and keeps cross-chunk state. Returns `&mut Self` for chaining.
     pub fn feed(&mut self, chunk: &str) -> &mut Self {
         // Operate on UTF-16 code units to match the source string indexing.
         let units: Vec<u16> = chunk.encode_utf16().collect();
@@ -127,12 +127,25 @@ impl Parser {
         self
     }
 
-    /// Drain fed statements and parse each one into a `P_DDS` node.
+    /// Drain the buffered statements and parse each into a `P_DDS` node.
     ///
-    /// Returns the parse tree root `{ id: "MAIN", def: [...] }`. Consumes the
-    /// pending statements. On a parse error the line number is corrected to
-    /// stream coordinates and everything resets.
-    pub fn results(&mut self) -> Result<Value, Error> {
+    /// Returns the parse tree root `{ id: "MAIN", def: [...] }`. This consumes
+    /// the pending statements, so a second call with no new input returns an
+    /// empty tree. On a parse error the line number is reported in stream
+    /// coordinates and all state resets.
+    ///
+    /// ```
+    /// use sql_ddl_to_json_schema::Parser;
+    ///
+    /// let mut parser = Parser::new("mysql").unwrap();
+    /// parser.feed("CREATE TABLE t (id INT);");
+    /// let first = parser.parse().unwrap();
+    /// assert_eq!(first["def"].as_array().unwrap().len(), 1);
+    /// // The statements are drained. A second call sees nothing.
+    /// let second = parser.parse().unwrap();
+    /// assert!(second["def"].as_array().unwrap().is_empty());
+    /// ```
+    pub fn parse(&mut self) -> Result<Value, Error> {
         let mut line_count = 1usize;
         let mut results = Vec::new();
 
@@ -149,7 +162,7 @@ impl Parser {
                 Err(e) => {
                     let error_line = e.line;
                     let new_count = line_count + error_line - 1;
-                    // Reset all state, matching the source error path.
+                    // Reset all state so a failed parse leaves a clean parser.
                     self.statements.clear();
                     self.remains.clear();
                     self.escaped = false;
@@ -169,52 +182,42 @@ impl Parser {
         Ok(json!({ "id": "MAIN", "def": results }))
     }
 
-    /// Format parsed SQL into the compact table model.
+    /// Drain the buffered statements and build the compact table model.
     ///
-    /// With `None`, parses the fed SQL first. With `Some(tree)`, formats the
-    /// given `MAIN` tree.
-    pub fn to_compact_json(&mut self, json: Option<Value>) -> Result<Vec<Value>, Error> {
-        let tree = match json {
-            Some(v) => v,
-            None => self.results()?,
-        };
-        compact::format(&tree).map_err(Error::Format)
+    /// Consumes the pending statements. To format a tree you already hold, use
+    /// [`compact_from_tree`].
+    pub fn parse_compact(&mut self) -> Result<Vec<Value>, Error> {
+        let tree = self.parse()?;
+        compact_from_tree(&tree)
     }
 
-    /// Format parsed SQL into JSON Schema draft-07 documents, one per table.
+    /// Drain the buffered statements and build JSON Schema draft-07 documents,
+    /// one per table.
     ///
-    /// With `tables = None`, parses the fed SQL and builds the compact model
-    /// first. Options default to `{ use_ref: true }`.
-    pub fn to_json_schema_array(
-        &mut self,
-        options: Option<JsonSchemaOptions>,
-        tables: Option<Vec<Value>>,
-    ) -> Result<Vec<Value>, Error> {
-        let opts = options.unwrap_or_default();
-        let tables = match tables {
-            Some(t) => t,
-            None => self.to_compact_json(None)?,
-        };
-        Ok(json_schema::format(&tables, opts))
+    /// Consumes the pending statements. Pass [`JsonSchemaOptions::default`] for
+    /// the default `{ use_ref: true }`. To format tables you already hold, use
+    /// [`json_schema_from_tables`].
+    pub fn parse_json_schema(&mut self, options: JsonSchemaOptions) -> Result<Vec<Value>, Error> {
+        let tables = self.parse_compact()?;
+        Ok(json_schema_from_tables(&tables, options))
     }
+}
 
-    /// Whether the preparser is currently inside an escape. Exposed for tests.
-    #[doc(hidden)]
-    pub fn is_escaped(&self) -> bool {
-        self.escaped
-    }
+/// Build the compact table model from a `MAIN` parse tree.
+///
+/// Use this to format a tree you already hold, for example one returned by
+/// [`Parser::parse`]. Returns [`Error::Format`] if the root id is not `MAIN`.
+pub fn compact_from_tree(tree: &Value) -> Result<Vec<Value>, Error> {
+    compact::format(tree).map_err(Error::Format)
+}
 
-    /// The current open quote char, or none. Exposed for tests.
-    #[doc(hidden)]
-    pub fn quoted_char(&self) -> Option<char> {
-        self.quoted
-    }
-
-    /// The number of split statements pending. Exposed for tests.
-    #[doc(hidden)]
-    pub fn statement_count(&self) -> usize {
-        self.statements.len()
-    }
+/// Build JSON Schema draft-07 documents from compact tables, one per table.
+///
+/// Use this to format tables you already hold, for example those returned by
+/// [`Parser::parse_compact`].
+#[must_use]
+pub fn json_schema_from_tables(tables: &[Value], options: JsonSchemaOptions) -> Vec<Value> {
+    json_schema::format(tables, options)
 }
 
 /// Whether a char opens or closes a quoted region.
@@ -251,4 +254,114 @@ fn count_line_breaks(s: &str) -> usize {
 /// character, which does not occur for real DDL input.
 fn utf16_to_string(units: &[u16]) -> String {
     String::from_utf16_lossy(units)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // The preparser tracks escape state, the open quote, and the count of split
+    // statements. These fields are private, so the checks live here.
+
+    #[test]
+    fn tracks_escape_quote_and_statements() {
+        let mut p = Parser::new("mysql").unwrap();
+
+        // Single char.
+        p.feed("a");
+        assert!(!p.escaped);
+        assert_eq!(p.quoted, None);
+
+        // Start escaping.
+        p.feed("\\");
+        assert!(p.escaped);
+        assert_eq!(p.quoted, None);
+
+        // Finish escaping.
+        p.feed("\\");
+        assert!(!p.escaped);
+        assert_eq!(p.quoted, None);
+
+        p.feed("\\");
+        assert!(p.escaped);
+        p.feed("n");
+        assert!(!p.escaped);
+        assert_eq!(p.quoted, None);
+
+        // Double quotes without escape.
+        p.feed("\"");
+        assert!(!p.escaped);
+        assert_eq!(p.quoted, Some('"'));
+        p.feed("\"");
+        assert_eq!(p.quoted, None);
+        p.feed("\"a");
+        assert_eq!(p.quoted, Some('"'));
+        p.feed("a\"");
+        assert_eq!(p.quoted, None);
+
+        // Single quotes without escape.
+        p.feed("'");
+        assert_eq!(p.quoted, Some('\''));
+        p.feed("'");
+        assert_eq!(p.quoted, None);
+        p.feed("'a");
+        assert_eq!(p.quoted, Some('\''));
+        p.feed("a'");
+        assert_eq!(p.quoted, None);
+
+        // Backticks without escape.
+        p.feed("`");
+        assert_eq!(p.quoted, Some('`'));
+        p.feed("`");
+        assert_eq!(p.quoted, None);
+        p.feed("`a");
+        assert_eq!(p.quoted, Some('`'));
+        p.feed("a`");
+        assert_eq!(p.quoted, None);
+
+        // Quoting with escape.
+        p.feed("`\\`");
+        assert!(!p.escaped);
+        assert_eq!(p.quoted, Some('`'));
+        p.feed("\\\\`");
+        assert_eq!(p.quoted, None);
+
+        p.feed("\"\\");
+        assert!(p.escaped);
+        assert_eq!(p.quoted, Some('"'));
+        p.feed("\"a`");
+        assert_eq!(p.quoted, Some('"'));
+        p.feed("'\\'");
+        assert_eq!(p.quoted, Some('"'));
+        p.feed("\"");
+        assert_eq!(p.quoted, None);
+
+        // Escaped semicolon does not split. The next char ends the escape.
+        p.feed("\\;");
+        assert!(!p.escaped);
+        assert_eq!(p.quoted, None);
+        assert_eq!(p.statements.len(), 1);
+
+        // Unescaped semicolon splits.
+        p.feed("a;");
+        assert_eq!(p.statements.len(), 2);
+
+        // Semicolon inside quotes does not split.
+        p.feed("a\";");
+        assert_eq!(p.quoted, Some('"'));
+        assert_eq!(p.statements.len(), 2);
+
+        p.feed("a\";");
+        assert_eq!(p.quoted, None);
+        assert_eq!(p.statements.len(), 3);
+    }
+
+    #[test]
+    fn splits_on_utf16_code_units() {
+        // Statement splitting counts UTF-16 code units. An astral char is two
+        // units, and it must not derail the split at the following semicolon.
+        let mut p = Parser::new("mysql").unwrap();
+        p.feed("USE \u{1F600};USE b;");
+        assert_eq!(p.statements.len(), 2);
+    }
 }
