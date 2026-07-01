@@ -25,7 +25,11 @@ fn parser_goldens_match() {
         }
     }
     if !failures.is_empty() {
-        eprintln!("{} parser goldens failed:\n{}", failures.len(), failures.join("\n"));
+        eprintln!(
+            "{} parser goldens failed:\n{}",
+            failures.len(),
+            failures.join("\n")
+        );
         if let Some((label, got, want)) = first_mismatch {
             assert_json_eq(&got, &want, &label);
         }

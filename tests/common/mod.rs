@@ -1,4 +1,8 @@
 //! Shared helpers for the golden-driven conformance tests.
+//!
+//! Each integration test binary links this module and uses a subset of it, so
+//! some helpers look unused from any single binary.
+#![allow(dead_code)]
 
 use std::fs;
 use std::path::{Path, PathBuf};
