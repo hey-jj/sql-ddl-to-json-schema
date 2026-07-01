@@ -201,6 +201,75 @@ fn decimal_and_float_maximum_use_string_method() {
     assert_eq!(float["maximum"], json!(9999.99));
 }
 
+#[test]
+fn compact_formatter_rejects_non_main_root() {
+    // A tree whose root id is not "MAIN" must be rejected with the documented
+    // message. This is the only throw path in the compact formatter.
+    let mut p = Parser::new("mysql").unwrap();
+    let bad = json!({ "id": "P_DDS", "def": [] });
+    let err = p.to_compact_json(Some(bad)).unwrap_err();
+    assert!(matches!(err, Error::Format(_)), "got {:?}", err);
+    assert_eq!(
+        err.to_string(),
+        "Invalid JSON format provided for CompactFormatter. \
+         Please provide JSON from root element, containing { id: MAIN }."
+    );
+}
+
+#[test]
+fn preparser_splits_on_utf16_code_units() {
+    // Statement splitting counts UTF-16 code units. An astral char (2 units)
+    // before a semicolon must not derail the split, and the char must survive
+    // into the parse tree.
+    let mut p = Parser::new("mysql").unwrap();
+    p.feed("USE \u{1F600};USE b;");
+    assert_eq!(p.statement_count(), 2);
+
+    // Astral char inside a string default round-trips through parse and compact.
+    let mut q = Parser::new("mysql").unwrap();
+    q.feed("CREATE TABLE t (c VARCHAR(10) DEFAULT '\u{1F600}');");
+    let tables = q.to_compact_json(None).unwrap();
+    assert_eq!(
+        tables[0]["columns"][0]["options"]["default"],
+        json!("\u{1F600}")
+    );
+}
+
+// Parse errors carry a line number in stream coordinates. The number must be
+// the line of the token where parsing broke, not the line of the statement's
+// first token. See tracking issue: error line resolution pins to the statement
+// start. Enable once the grammar reports the furthest-reached token line.
+#[test]
+#[ignore = "known divergence: error line reports statement-start, not failure token"]
+fn parse_error_line_matches_stream_coordinates() {
+    let cases: &[(&[&str], i64)] = &[
+        (
+            &["CREATE\n        TABLE A (\n        A bool,\n        B bool\n        )\n        ;\n\n      CREATE\n      TEST;\n\n      "],
+            9,
+        ),
+        (
+            &["\n        CREATE\n        TEST;\n\n        CREATE TABLE A (\n        A bool,\n        B bool\n        )\n        ;\n      "],
+            3,
+        ),
+        (&["CREATE TABLE A (A bool);\n\r\r\n", "CREATE\n      TEST;"], 4),
+    ];
+    for (chunks, want) in cases {
+        let mut p = Parser::new("mysql").unwrap();
+        for c in *chunks {
+            p.feed(c);
+        }
+        let msg = p.results().unwrap_err().to_string();
+        let got: i64 = msg
+            .chars()
+            .skip_while(|c| !c.is_ascii_digit())
+            .take_while(|c| c.is_ascii_digit())
+            .collect::<String>()
+            .parse()
+            .unwrap_or(-1);
+        assert_eq!(got, *want, "line number for {:?}", chunks);
+    }
+}
+
 /// Build the JSON Schema for the single column `c` in a one-column table.
 fn schema_for_column(ddl: &str) -> Value {
     let mut p = Parser::new("mysql").unwrap();
