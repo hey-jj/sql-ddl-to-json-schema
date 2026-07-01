@@ -1,0 +1,10 @@
+[package]
+name = "sql-ddl-to-json-schema"
+version = "0.1.0"
+edition = "2021"
+description = "parse MySQL/MariaDB CREATE TABLE DDL into AST and emit JSON Schema"
+license = "MIT"
+repository = "https://github.com/hey-jj/sql-ddl-to-json-schema"
+readme = "README.md"
+
+[dependencies]
