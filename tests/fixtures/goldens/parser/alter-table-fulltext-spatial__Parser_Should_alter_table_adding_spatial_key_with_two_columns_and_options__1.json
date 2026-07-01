@@ -1,0 +1,65 @@
+{
+  "group": "parser",
+  "spec": "alter-table-fulltext-spatial",
+  "description": "Parser: Should alter table adding spatial key with two columns and options.",
+  "jestKey": "Parser: Should alter table adding spatial key with two columns and options. 1",
+  "query": "ALTER TABLE people add spatial key sk_id ( id ( 2 ) asc , o_id ) key_block_size 1024 comment 'test';",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "addSpatialIndex",
+                      "name": "sk_id",
+                      "columns": [
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "id",
+                            "length": 2,
+                            "sort": "asc"
+                          }
+                        },
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "o_id"
+                          }
+                        }
+                      ],
+                      "options": [
+                        {
+                          "id": "O_INDEX_OPTION",
+                          "def": {
+                            "keyBlockSize": 1024
+                          }
+                        },
+                        {
+                          "id": "O_INDEX_OPTION",
+                          "def": {
+                            "comment": "test"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,295 @@
+{
+  "group": "parser",
+  "spec": "create-table",
+  "description": "Parser: Should create table with all table options.",
+  "jestKey": "Parser: Should create table with all table options. 1",
+  "query": "CREATE TABLE person(\n        initial CHAR(1)\n      )\n      AUTO_INCREMENT 2,\n      AVG_ROW_LENGTH=1000,\n      DEFAULT CHARACTER SET latin1,\n      CHARACTER SET= utf8,\n      CHECKSUM 0,\n      CHECKSUM =1,\n      DEFAULT COLLATE utf8_cirylic_ci,\n      COLLATE=utf8_general_ci,\n      COMMENT 'test table',\n      COMPRESSION 'ZLIB',\n      COMPRESSION 'LZ4',\n      COMPRESSION 'NONE',\n      CONNECTION 'mariadb://whatever',\n      DATA DIRECTORY = '/var/lib/mariadb/data',\n      INDEX DIRECTORY '/var/lib/mariadb/index',\n      DELAY_KEY_WRITE = 1,\n      ENCRYPTION = 'Y',\n      ENCRYPTION_KEY_ID = 1,\n      IETF_QUOTES = YES,\n      ENGINE MyISAM,\n      INSERT_METHOD LAST,\n      KEY_BLOCK_SIZE = 500,\n      MAX_ROWS = 1000,\n      MIN_ROWS = 1,\n      PACK_KEYS = 0,\n      PACK_KEYS DEFAULT,\n      PASSWORD '123456',\n      PAGE_CHECKSUM = 0,\n      ROW_FORMAT = DEFAULT,\n      ROW_FORMAT DYNAMIC,\n      STATS_AUTO_RECALC = DEFAULT,\n      STATS_PERSISTENT 0,\n      STATS_SAMPLE_PAGES 'test',\n      TABLESPACE abc,\n      TABLESPACE `qwe` STORAGE DISK,\n      TRANSACTIONAL 1,\n      UNION (address),\n      UNION (address, phone),\n      WITH SYSTEM VERSIONING\n      ;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_CREATE_TABLE",
+          "def": {
+            "id": "P_CREATE_TABLE_COMMON",
+            "def": {
+              "table": "person",
+              "columnsDef": {
+                "id": "P_CREATE_TABLE_CREATE_DEFINITIONS",
+                "def": [
+                  {
+                    "id": "O_CREATE_TABLE_CREATE_DEFINITION",
+                    "def": {
+                      "column": {
+                        "name": "initial",
+                        "def": {
+                          "datatype": {
+                            "id": "O_DATATYPE",
+                            "def": {
+                              "id": "O_VARIABLE_STRING_DATATYPE",
+                              "def": {
+                                "datatype": "CHAR",
+                                "length": 1
+                              }
+                            }
+                          },
+                          "columnDefinition": []
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "tableOptions": {
+                "id": "P_CREATE_TABLE_OPTIONS",
+                "def": [
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "autoincrement": 2
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "avgRowLength": 1000
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "charset": "latin1"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "charset": "utf8"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "checksum": 0
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "checksum": 1
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "collation": "utf8_cirylic_ci"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "collation": "utf8_general_ci"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "comment": "test table"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "compression": "ZLIB"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "compression": "LZ4"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "compression": "NONE"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "connection": "mariadb://whatever"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "dataDirectory": "/var/lib/mariadb/data"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "indexDirectory": "/var/lib/mariadb/index"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "delayKeyWrite": 1
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "encryption": "Y"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "encryptionKeyId": 1
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "ietfQuotes": "YES"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "engine": "MyISAM"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "insertMethod": "LAST"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "keyBlockSize": 500
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "maxRows": 1000
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "minRows": 1
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "packKeys": 0
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "packKeys": "DEFAULT"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "password": "123456"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "pageChecksum": 0
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "rowFormat": "DEFAULT"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "rowFormat": "DYNAMIC"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "statsAutoRecalc": "DEFAULT"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "statsPersistent": 0
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "statsSamplePages": "test"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "tablespaceName": "abc"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "tablespaceName": "qwe",
+                      "tablespaceStorage": "DISK"
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "transactional": 1
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "union": [
+                        "address"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "union": [
+                        "address",
+                        "phone"
+                      ]
+                    }
+                  },
+                  {
+                    "id": "O_CREATE_TABLE_OPTION",
+                    "def": {
+                      "withSystemVersioning": true
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

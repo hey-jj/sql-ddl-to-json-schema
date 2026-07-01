@@ -1,0 +1,35 @@
+{
+  "group": "parser",
+  "spec": "alter-table-misc",
+  "description": "Parser: Should alter table algorithm, with online, ignore and wait keywords.",
+  "jestKey": "Parser: Should alter table algorithm, with online, ignore and wait keywords. 1",
+  "query": "ALTER online ignore TABLE people wait 5 algorithm = default;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "changeAlgorithm",
+                      "algorithm": "default"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

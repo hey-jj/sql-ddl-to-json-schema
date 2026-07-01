@@ -1,0 +1,88 @@
+{
+  "group": "parser",
+  "spec": "alter-table-foreign",
+  "description": "Parser: Should alter table adding foreign key with two columns, match and trigger.",
+  "jestKey": "Parser: Should alter table adding foreign key with two columns, match and trigger. 1",
+  "query": "ALTER TABLE people add constraint xyz foreign key fk_ax_id__ay_id (ax_id (20) asc , ay_id ) references other ( xid ( 10 ) desc , yid ) match full on delete set null on update no action on delete cascade;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "addForeignKey",
+                      "name": "xyz",
+                      "columns": [
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "ax_id",
+                            "length": 20,
+                            "sort": "asc"
+                          }
+                        },
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "ay_id"
+                          }
+                        }
+                      ],
+                      "reference": {
+                        "id": "P_COLUMN_REFERENCE",
+                        "def": {
+                          "table": "other",
+                          "columns": [
+                            {
+                              "id": "P_INDEX_COLUMN",
+                              "def": {
+                                "column": "xid",
+                                "length": 10,
+                                "sort": "desc"
+                              }
+                            },
+                            {
+                              "id": "P_INDEX_COLUMN",
+                              "def": {
+                                "column": "yid"
+                              }
+                            }
+                          ],
+                          "match": "full",
+                          "on": [
+                            {
+                              "trigger": "delete",
+                              "action": "set null"
+                            },
+                            {
+                              "trigger": "update",
+                              "action": "no action"
+                            },
+                            {
+                              "trigger": "delete",
+                              "action": "cascade"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

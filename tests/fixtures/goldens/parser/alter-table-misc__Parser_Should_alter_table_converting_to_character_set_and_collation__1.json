@@ -1,0 +1,36 @@
+{
+  "group": "parser",
+  "spec": "alter-table-misc",
+  "description": "Parser: Should alter table converting to character set and collation.",
+  "jestKey": "Parser: Should alter table converting to character set and collation. 1",
+  "query": "ALTER TABLE people convert to character set utf8 collate utf8_general_ci;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "convertToCharacterSet",
+                      "charset": "utf8",
+                      "collate": "utf8_general_ci"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

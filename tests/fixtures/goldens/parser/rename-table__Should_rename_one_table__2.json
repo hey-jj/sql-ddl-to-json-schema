@@ -1,0 +1,24 @@
+{
+  "group": "parser",
+  "spec": "rename-table",
+  "description": "Should rename one table.",
+  "jestKey": "Should rename one table. 2",
+  "query": "rename table people to persons;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_RENAME_TABLE",
+          "def": [
+            {
+              "table": "people",
+              "newName": "persons"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

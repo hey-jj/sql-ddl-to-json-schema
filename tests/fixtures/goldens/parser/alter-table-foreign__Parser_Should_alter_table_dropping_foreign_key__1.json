@@ -1,0 +1,35 @@
+{
+  "group": "parser",
+  "spec": "alter-table-foreign",
+  "description": "Parser: Should alter table dropping foreign key.",
+  "jestKey": "Parser: Should alter table dropping foreign key. 1",
+  "query": "ALTER TABLE people drop foreign key fk_oid;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "dropForeignKey",
+                      "key": "fk_oid"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

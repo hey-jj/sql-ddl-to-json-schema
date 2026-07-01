@@ -1,0 +1,56 @@
+{
+  "group": "parser",
+  "spec": "alter-table-change-column",
+  "description": "Parser: Should alter table changing column definition with option, first position.",
+  "jestKey": "Parser: Should alter table changing column definition with option, first position. 1",
+  "query": "ALTER TABLE people modify column name varchar(255) character set utf8 first;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "changeColumn",
+                      "column": "name",
+                      "datatype": {
+                        "id": "O_DATATYPE",
+                        "def": {
+                          "id": "O_VARIABLE_STRING_DATATYPE",
+                          "def": {
+                            "datatype": "varchar",
+                            "length": 255
+                          }
+                        }
+                      },
+                      "columnDefinition": [
+                        {
+                          "id": "O_COLUMN_DEFINITION",
+                          "def": {
+                            "charset": "utf8"
+                          }
+                        }
+                      ],
+                      "position": {
+                        "after": null
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

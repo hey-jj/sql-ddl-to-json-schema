@@ -1,0 +1,36 @@
+{
+  "group": "parser",
+  "spec": "alter-table-index-key",
+  "description": "Parser: Should alter table renaming index.",
+  "jestKey": "Parser: Should alter table renaming index. 1",
+  "query": "ALTER TABLE people rename index i_oid to ii_oid;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "renameIndex",
+                      "index": "i_oid",
+                      "newName": "ii_oid"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

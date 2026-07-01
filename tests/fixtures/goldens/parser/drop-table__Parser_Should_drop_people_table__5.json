@@ -1,0 +1,21 @@
+{
+  "group": "parser",
+  "spec": "drop-table",
+  "description": "Parser: Should drop people table",
+  "jestKey": "Parser: Should drop people table 5",
+  "query": "drop temporary table if exists people restrict;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_DROP_TABLE",
+          "def": [
+            "people"
+          ]
+        }
+      }
+    ]
+  }
+}

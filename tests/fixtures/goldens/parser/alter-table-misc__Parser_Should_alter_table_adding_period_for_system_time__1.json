@@ -1,0 +1,36 @@
+{
+  "group": "parser",
+  "spec": "alter-table-misc",
+  "description": "Parser: Should alter table adding period for system_time.",
+  "jestKey": "Parser: Should alter table adding period for system_time. 1",
+  "query": "alter table test add period for system_time (test1, test2);",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "test",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "addPeriodForSystemTime",
+                      "startColumnName": "test1",
+                      "endColumnName": "test2"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

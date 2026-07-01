@@ -1,0 +1,61 @@
+{
+  "group": "parser",
+  "spec": "alter-table-primary-key",
+  "description": "Parser: Should alter table adding primary key with two columns and option.",
+  "jestKey": "Parser: Should alter table adding primary key with two columns and option. 1",
+  "query": "ALTER TABLE people add constraint pk_id__o_id primary key(id(2),o_id(3)asc)key_block_size 1024;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "addPrimaryKey",
+                      "name": "pk_id__o_id",
+                      "index": null,
+                      "columns": [
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "id",
+                            "length": 2
+                          }
+                        },
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "o_id",
+                            "length": 3,
+                            "sort": "asc"
+                          }
+                        }
+                      ],
+                      "options": [
+                        {
+                          "id": "O_INDEX_OPTION",
+                          "def": {
+                            "keyBlockSize": 1024
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

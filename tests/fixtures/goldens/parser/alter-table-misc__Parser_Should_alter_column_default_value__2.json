@@ -1,0 +1,36 @@
+{
+  "group": "parser",
+  "spec": "alter-table-misc",
+  "description": "Parser: Should alter column default value.",
+  "jestKey": "Parser: Should alter column default value. 2",
+  "query": "ALTER TABLE people alter age set default 18;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "setDefaultColumnValue",
+                      "column": "age",
+                      "value": 18
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

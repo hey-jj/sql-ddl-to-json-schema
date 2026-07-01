@@ -1,0 +1,25 @@
+{
+  "group": "parser",
+  "spec": "create-table",
+  "description": "Parser: Should create table like another one.",
+  "jestKey": "Parser: Should create table like another one. 2",
+  "query": "create or replace temporary table person like people;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_CREATE_TABLE",
+          "def": {
+            "id": "P_CREATE_TABLE_LIKE",
+            "def": {
+              "table": "person",
+              "like": "people"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

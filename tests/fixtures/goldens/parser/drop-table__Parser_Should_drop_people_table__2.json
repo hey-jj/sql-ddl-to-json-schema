@@ -1,0 +1,21 @@
+{
+  "group": "parser",
+  "spec": "drop-table",
+  "description": "Parser: Should drop people table",
+  "jestKey": "Parser: Should drop people table 2",
+  "query": "drop table people;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_DROP_TABLE",
+          "def": [
+            "people"
+          ]
+        }
+      }
+    ]
+  }
+}

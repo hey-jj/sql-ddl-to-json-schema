@@ -1,0 +1,59 @@
+{
+  "group": "parser",
+  "spec": "alter-table-foreign",
+  "description": "Parser: Should alter table adding foreign key with unnamed key.",
+  "jestKey": "Parser: Should alter table adding foreign key with unnamed key. 1",
+  "query": "ALTER TABLE people add constraint xyz foreign key (o_id) references other (id);",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "addForeignKey",
+                      "name": "xyz",
+                      "columns": [
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "o_id"
+                          }
+                        }
+                      ],
+                      "reference": {
+                        "id": "P_COLUMN_REFERENCE",
+                        "def": {
+                          "table": "other",
+                          "columns": [
+                            {
+                              "id": "P_INDEX_COLUMN",
+                              "def": {
+                                "column": "id"
+                              }
+                            }
+                          ],
+                          "match": null,
+                          "on": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

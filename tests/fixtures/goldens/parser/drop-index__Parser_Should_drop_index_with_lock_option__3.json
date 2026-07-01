@@ -1,0 +1,30 @@
+{
+  "group": "parser",
+  "spec": "drop-index",
+  "description": "Parser: Should drop index with lock option",
+  "jestKey": "Parser: Should drop index with lock option 3",
+  "query": "drop index i_oid on people lock = default;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_DROP_INDEX",
+          "def": {
+            "index": "i_oid",
+            "table": "people",
+            "options": [
+              {
+                "id": "P_LOCK_OPTION",
+                "def": {
+                  "lock": "default"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

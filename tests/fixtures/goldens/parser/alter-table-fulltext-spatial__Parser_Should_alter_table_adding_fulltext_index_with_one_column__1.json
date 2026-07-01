@@ -1,0 +1,44 @@
+{
+  "group": "parser",
+  "spec": "alter-table-fulltext-spatial",
+  "description": "Parser: Should alter table adding fulltext index with one column.",
+  "jestKey": "Parser: Should alter table adding fulltext index with one column. 1",
+  "query": "ALTER TABLE people add fulltext index (id);",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "addFulltextIndex",
+                      "name": null,
+                      "columns": [
+                        {
+                          "id": "P_INDEX_COLUMN",
+                          "def": {
+                            "column": "id"
+                          }
+                        }
+                      ],
+                      "options": []
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

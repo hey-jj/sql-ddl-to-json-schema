@@ -1,0 +1,29 @@
+{
+  "group": "parser",
+  "spec": "alter-database",
+  "description": "Parser: Should alter test database with charset utf8",
+  "jestKey": "Parser: Should alter test database with charset utf8 2",
+  "query": "ALTER SCHEMA test CHARACTER SET utf8;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_DB",
+          "def": {
+            "database": "test",
+            "meta": [
+              {
+                "id": "O_ALTER_DB_SPEC",
+                "def": {
+                  "charset": "utf8"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

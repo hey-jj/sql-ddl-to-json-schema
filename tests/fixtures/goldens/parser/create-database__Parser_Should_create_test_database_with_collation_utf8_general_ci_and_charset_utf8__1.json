@@ -1,0 +1,35 @@
+{
+  "group": "parser",
+  "spec": "create-database",
+  "description": "Parser: Should create test database with collation utf8_general_ci and charset utf8",
+  "jestKey": "Parser: Should create test database with collation utf8_general_ci and charset utf8 1",
+  "query": "CREATE DATABASE test COLLATE utf8_general_ci CHARACTER SET utf8;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_CREATE_DB",
+          "def": {
+            "database": "test",
+            "meta": [
+              {
+                "id": "O_CREATE_DB_SPEC",
+                "def": {
+                  "collation": "utf8_general_ci"
+                }
+              },
+              {
+                "id": "O_CREATE_DB_SPEC",
+                "def": {
+                  "charset": "utf8"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

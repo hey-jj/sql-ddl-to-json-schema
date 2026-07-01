@@ -1,0 +1,23 @@
+{
+  "group": "parser",
+  "spec": "drop-index",
+  "description": "Parser: Should drop index.",
+  "jestKey": "Parser: Should drop index. 1",
+  "query": "drop index i_oid on people;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_DROP_INDEX",
+          "def": {
+            "index": "i_oid",
+            "table": "people",
+            "options": []
+          }
+        }
+      }
+    ]
+  }
+}

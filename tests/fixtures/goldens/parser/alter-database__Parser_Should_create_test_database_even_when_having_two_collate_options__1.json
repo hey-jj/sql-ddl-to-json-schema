@@ -1,0 +1,41 @@
+{
+  "group": "parser",
+  "spec": "alter-database",
+  "description": "Parser: Should create test database even when having two collate options.",
+  "jestKey": "Parser: Should create test database even when having two collate options. 1",
+  "query": "alter DATABASE test COLLATE utf8_cirylic_ci CHARACTER SET utf8 COLLATE utf8_general_ci;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_DB",
+          "def": {
+            "database": "test",
+            "meta": [
+              {
+                "id": "O_ALTER_DB_SPEC",
+                "def": {
+                  "collation": "utf8_cirylic_ci"
+                }
+              },
+              {
+                "id": "O_ALTER_DB_SPEC",
+                "def": {
+                  "charset": "utf8"
+                }
+              },
+              {
+                "id": "O_ALTER_DB_SPEC",
+                "def": {
+                  "collation": "utf8_general_ci"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

@@ -2,9 +2,21 @@
 name = "sql-ddl-to-json-schema"
 version = "0.1.0"
 edition = "2021"
-description = "parse MySQL/MariaDB CREATE TABLE DDL into AST and emit JSON Schema"
+rust-version = "1.74"
+description = "Parse MySQL and MariaDB DDL into a compact table model and JSON Schema draft-07 documents"
 license = "MIT"
 repository = "https://github.com/hey-jj/sql-ddl-to-json-schema"
 readme = "README.md"
+keywords = ["sql", "ddl", "json-schema", "mysql", "mariadb"]
+categories = ["parsing", "database"]
 
 [dependencies]
+# serde_json is the public output type. Every formatter emits `serde_json::Value`,
+# the closest Rust match to the JSON documents the parser produces. The
+# preserve_order feature keeps object keys in insertion order so output reads
+# the same way the model builds it.
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[dev-dependencies]
+# Tests load golden JSON files and compare by structural value equality.
+serde = { version = "1", features = ["derive"] }

@@ -1,0 +1,22 @@
+{
+  "group": "parser",
+  "spec": "create-database",
+  "description": "Parser: Should create test database",
+  "jestKey": "Parser: Should create test database 3",
+  "query": "create database test;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_CREATE_DB",
+          "def": {
+            "database": "test",
+            "meta": []
+          }
+        }
+      }
+    ]
+  }
+}

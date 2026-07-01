@@ -1,0 +1,24 @@
+{
+  "group": "parser",
+  "spec": "drop-table",
+  "description": "Parser: Should drop several tables",
+  "jestKey": "Parser: Should drop several tables 2",
+  "query": "drop table people, cars,pets ,test;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_DROP_TABLE",
+          "def": [
+            "people",
+            "cars",
+            "pets",
+            "test"
+          ]
+        }
+      }
+    ]
+  }
+}

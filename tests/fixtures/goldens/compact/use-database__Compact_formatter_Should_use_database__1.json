@@ -1,0 +1,8 @@
+{
+  "group": "compact",
+  "spec": "use-database",
+  "description": "Compact formatter: Should use database.",
+  "jestKey": "Compact formatter: Should use database. 1",
+  "query": "USE dbname;USE `dbname`;",
+  "value": []
+}

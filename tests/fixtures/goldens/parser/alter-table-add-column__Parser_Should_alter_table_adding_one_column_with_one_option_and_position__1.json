@@ -1,0 +1,56 @@
+{
+  "group": "parser",
+  "spec": "alter-table-add-column",
+  "description": "Parser: Should alter table adding one column with one option and position.",
+  "jestKey": "Parser: Should alter table adding one column with one option and position. 1",
+  "query": "ALTER TABLE people add column uid int(10) unsigned after name;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_TABLE",
+          "def": {
+            "table": "people",
+            "specs": [
+              {
+                "id": "P_ALTER_TABLE_SPECS",
+                "def": {
+                  "spec": {
+                    "id": "O_ALTER_TABLE_SPEC",
+                    "def": {
+                      "action": "addColumn",
+                      "name": "uid",
+                      "datatype": {
+                        "id": "O_DATATYPE",
+                        "def": {
+                          "id": "O_INTEGER_DATATYPE",
+                          "def": {
+                            "datatype": "int",
+                            "displayWidth": 10
+                          }
+                        }
+                      },
+                      "columnDefinition": [
+                        {
+                          "id": "O_COLUMN_DEFINITION",
+                          "def": {
+                            "unsigned": true
+                          }
+                        }
+                      ],
+                      "position": {
+                        "after": "name"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

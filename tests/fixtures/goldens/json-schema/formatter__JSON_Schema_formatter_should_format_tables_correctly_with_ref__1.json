@@ -1,0 +1,482 @@
+{
+  "group": "json-schema",
+  "spec": "formatter",
+  "description": "JSON Schema formatter: should format tables correctly, with ref.",
+  "jestKey": "JSON Schema formatter: should format tables correctly, with ref. 1",
+  "query": "USE my_db;\nUSE `your_db`;\n\nCREATE TABLE person (\n  id INT(10) UNSIGNED ZEROFILL NOT NULL AUTO_INCREMENT KEY COMMENT 'primary key test',\n  name TEXT NOT NULL DEFAULT 'Jane \"Doe\" O`neil' character set utf8 collate utf8_general_ci,\n  nickname VARCHAR(20) DEFAULT 'J',\n  binarynickname VARCHAR(20) binary NOT NULL,\n  ssn SMALLINT UNIQUE INVISIBLE WITH SYSTEM VERSIONING COMMENT 'SMALLINT',\n  height NUMERIC DEFAULT NULL,\n  weight NUMERIC(3),\n  status BIT INVISIBLE WITHOUT SYSTEM VERSIONING,\n  dob DATE INVISIBLE DEFAULT NOW(),\n  tob TIME(3),\n  initials CHAR(3) COLUMN_FORMAT FIXED,\n  prefix NCHAR(3) COLUMN_FORMAT FIXED,\n  suffix NATIONAL CHAR COLUMN_FORMAT FIXED,\n  nsuffix NVARCHAR(3),\n  sequence VARBINARY(20) STORAGE DISK,\n  avatar BLOB NULL,\n  motto TEXT(50),\n  history TINYTEXT,\n  gender ENUM('M', 'F'),\n  shape MULTIPOINT,\n  pattern MULTILINESTRING,\n  CONSTRAINT unique_motto UNIQUE INDEX u_motto USING Btree (motto) COMMENT 'be original',\n  FULLTEXT INDEX fi_initials (initials)\n)\nauto_increment 2,\navg_row_length 250,\ndefault character set utf8,\ndefault collate utf8_general_ci,\nchecksum = 1,\ncomment 'test table',\nengine 'XtraDB',\ncompression = 'zLIB',\ninsert_method lasT,\nunion (pet)\n;\n\nCREATE TABLE pet (\n  id BIGINT,\n  species VARCHAR(200),\n  owner_id MEDIUMINT REFERENCES person (id(10) asc),\n  height_unsigned DECIMAL UNSIGNED,\n  weight_unsigned DECIMAL(4,2) UNSIGNED,\n  height DECIMAL,\n  weight DECIMAL(4,2),\n  status BIT(2),\n  birth DATETIME,\n  year YEAR(2),\n  initial CHAR,\n  avatar TINYBLOB,\n  photo MEDIUMBLOB,\n  history MEDIUMTEXT,\n  gender SET('M', 'F'),\n  intelligent SET('N'),\n  shape POLYGON,\n  pattern MULTIPOLYGON,\n  unique_id1 uuid PRIMARY KEY,\n  unique_id2 UniqueIdentifier DEFAULT uuid(),\n  object JSON,\n  INDEX i_dimensions USING BTREE (height, weight(2) asc) COMMENT 'good boy',\n  KEY i_birth (birth(5) desc) USING BTREE\n)\nconnection 'mysql://xyz',\ndata directory = '/data',\ndelay_key_write = 0,\nencryption = '123456',\nencryption_key_id 2,\nietf_quotes NO,\ninsert_method FIRST,\npack_keys 0,\nrow_format dYnAmiC,\nstats_auto_recalc 0,\nwith system versioning,\ntablespace abc,\nunion = (house, person)\n;\n\nCREATE TABLE house (\n  id INTEGER,\n  pet_id TINYINT,\n  coordx FLOAT (6,2),\n  coordy DOUBLE,\n  letter CHARACTER,\n  is_built BOOL,\n  is_apartment BOOLEAN,\n  updated_at TIMESTAMP,\n  year YEAR,\n  sequence BINARY DEFAULT b'00101',\n  photo LONGBLOB,\n  history LONGTEXT,\n  gender ENUM('X'),\n  size GEOMETRY REFERENCES pet (height, weight(2)) MATCH FULL ON DELETE SET NULL ON UPDATE SET DEFAULT,\n  where POINT,\n  street LINESTRING,\n  neighbors MULTIPOLYGON,\n  city GEOMETRYCOLLECTION,\n  CONSTRAINT pk_id PRIMARY KEY USING HASH (id(8) asc) KEY_BLOCK_SIZE 1024 USING HASH WITH PARSER myParser COMMENT 'complex test',\n  SPATIAL INDEX coords (coordx, coordy) COMMENT 'hi neighbor',\n  CONSTRAINT fk_pet_id FOREIGN KEY (pet_id) REFERENCES pet (id(10) asc)\n)\nindex directory '/var/index',\nietf_quotes yes,\ninsert_method no,\nkey_block_size 1024,\nmax_rows 7e9,\nmin_rows 1,\npack_keys default,\npage_checksum 0,\npassword '123\"456',\nrow_format default,\nstats_auto_recalc default,\ntransactional = 1,\ntablespace abc storage deFaULt\n;\n",
+  "value": [
+    {
+      "$schema": "http://json-schema.org/draft-07/schema",
+      "$comment": "JSON Schema for person table",
+      "$id": "person",
+      "title": "person",
+      "description": "test table",
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "binarynickname"
+      ],
+      "definitions": {
+        "id": {
+          "$comment": "primary key",
+          "description": "primary key test",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 65535,
+          "default": "Jane \"Doe\" O`neil"
+        },
+        "nickname": {
+          "type": "string",
+          "maxLength": 20,
+          "default": "J"
+        },
+        "binarynickname": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "ssn": {
+          "description": "SMALLINT",
+          "type": "integer",
+          "minimum": -32768,
+          "maximum": 32767
+        },
+        "height": {
+          "type": "number",
+          "maximum": 9999999999,
+          "minimum": -9999999999,
+          "default": null
+        },
+        "weight": {
+          "type": "number",
+          "maximum": 999,
+          "minimum": -999
+        },
+        "status": {
+          "type": "string"
+        },
+        "dob": {
+          "type": "string",
+          "format": "date",
+          "default": "NOW()"
+        },
+        "tob": {
+          "type": "string",
+          "format": "time"
+        },
+        "initials": {
+          "type": "string",
+          "maxLength": 3
+        },
+        "prefix": {
+          "type": "string",
+          "maxLength": 3
+        },
+        "suffix": {
+          "type": "string",
+          "maxLength": 1
+        },
+        "nsuffix": {
+          "type": "string",
+          "maxLength": 3
+        },
+        "sequence": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "motto": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "history": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "gender": {
+          "type": "string",
+          "enum": [
+            "M",
+            "F"
+          ]
+        },
+        "shape": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        }
+      },
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "name": {
+          "$ref": "#/definitions/name"
+        },
+        "nickname": {
+          "$ref": "#/definitions/nickname"
+        },
+        "binarynickname": {
+          "$ref": "#/definitions/binarynickname"
+        },
+        "ssn": {
+          "$ref": "#/definitions/ssn"
+        },
+        "height": {
+          "$ref": "#/definitions/height"
+        },
+        "weight": {
+          "$ref": "#/definitions/weight"
+        },
+        "status": {
+          "$ref": "#/definitions/status"
+        },
+        "dob": {
+          "$ref": "#/definitions/dob"
+        },
+        "tob": {
+          "$ref": "#/definitions/tob"
+        },
+        "initials": {
+          "$ref": "#/definitions/initials"
+        },
+        "prefix": {
+          "$ref": "#/definitions/prefix"
+        },
+        "suffix": {
+          "$ref": "#/definitions/suffix"
+        },
+        "nsuffix": {
+          "$ref": "#/definitions/nsuffix"
+        },
+        "sequence": {
+          "$ref": "#/definitions/sequence"
+        },
+        "avatar": {
+          "$ref": "#/definitions/avatar"
+        },
+        "motto": {
+          "$ref": "#/definitions/motto"
+        },
+        "history": {
+          "$ref": "#/definitions/history"
+        },
+        "gender": {
+          "$ref": "#/definitions/gender"
+        },
+        "shape": {
+          "$ref": "#/definitions/shape"
+        },
+        "pattern": {
+          "$ref": "#/definitions/pattern"
+        }
+      }
+    },
+    {
+      "$schema": "http://json-schema.org/draft-07/schema",
+      "$comment": "JSON Schema for pet table",
+      "$id": "pet",
+      "title": "pet",
+      "type": "object",
+      "required": [
+        "unique_id1"
+      ],
+      "definitions": {
+        "id": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "species": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "owner_id": {
+          "type": "integer",
+          "minimum": -8388608,
+          "maximum": 8388607
+        },
+        "height_unsigned": {
+          "type": "number",
+          "maximum": 9999999999,
+          "minimum": 0
+        },
+        "weight_unsigned": {
+          "type": "number",
+          "maximum": 99.99,
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "maximum": 9999999999,
+          "minimum": -9999999999
+        },
+        "weight": {
+          "type": "number",
+          "maximum": 99.99,
+          "minimum": -99.99
+        },
+        "status": {
+          "type": "string"
+        },
+        "birth": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "year": {
+          "type": "string",
+          "pattern": "\\d{1,2}"
+        },
+        "initial": {
+          "type": "string",
+          "maxLength": 1
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "photo": {
+          "type": "string"
+        },
+        "history": {
+          "type": "string",
+          "maxLength": 16777215
+        },
+        "gender": {
+          "type": "string",
+          "pattern": "^(M|F)(,(M|F))*$"
+        },
+        "intelligent": {
+          "type": "string",
+          "pattern": "^(N)(,(N))*$"
+        },
+        "shape": {
+          "type": "string"
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "unique_id1": {
+          "$comment": "primary key",
+          "type": "string",
+          "pattern": "^[a-f\\d]{8}-([a-f\\d]{4}-){3}[a-f\\d]{12}$"
+        },
+        "unique_id2": {
+          "type": "string",
+          "pattern": "^[a-f\\d]{8}-([a-f\\d]{4}-){3}[a-f\\d]{12}$"
+        },
+        "object": {
+          "type": "string"
+        }
+      },
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "species": {
+          "$ref": "#/definitions/species"
+        },
+        "owner_id": {
+          "$ref": "#/definitions/owner_id"
+        },
+        "height_unsigned": {
+          "$ref": "#/definitions/height_unsigned"
+        },
+        "weight_unsigned": {
+          "$ref": "#/definitions/weight_unsigned"
+        },
+        "height": {
+          "$ref": "#/definitions/height"
+        },
+        "weight": {
+          "$ref": "#/definitions/weight"
+        },
+        "status": {
+          "$ref": "#/definitions/status"
+        },
+        "birth": {
+          "$ref": "#/definitions/birth"
+        },
+        "year": {
+          "$ref": "#/definitions/year"
+        },
+        "initial": {
+          "$ref": "#/definitions/initial"
+        },
+        "avatar": {
+          "$ref": "#/definitions/avatar"
+        },
+        "photo": {
+          "$ref": "#/definitions/photo"
+        },
+        "history": {
+          "$ref": "#/definitions/history"
+        },
+        "gender": {
+          "$ref": "#/definitions/gender"
+        },
+        "intelligent": {
+          "$ref": "#/definitions/intelligent"
+        },
+        "shape": {
+          "$ref": "#/definitions/shape"
+        },
+        "pattern": {
+          "$ref": "#/definitions/pattern"
+        },
+        "unique_id1": {
+          "$ref": "#/definitions/unique_id1"
+        },
+        "unique_id2": {
+          "$ref": "#/definitions/unique_id2"
+        },
+        "object": {
+          "$ref": "#/definitions/object"
+        }
+      }
+    },
+    {
+      "$schema": "http://json-schema.org/draft-07/schema",
+      "$comment": "JSON Schema for house table",
+      "$id": "house",
+      "title": "house",
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "definitions": {
+        "id": {
+          "$comment": "primary key",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "pet_id": {
+          "type": "integer",
+          "minimum": -128,
+          "maximum": 127
+        },
+        "coordx": {
+          "type": "number",
+          "maximum": 9999.99,
+          "minimum": -9999.99
+        },
+        "coordy": {
+          "type": "number"
+        },
+        "letter": {
+          "type": "string",
+          "maxLength": 1
+        },
+        "is_built": {
+          "type": "boolean"
+        },
+        "is_apartment": {
+          "type": "boolean"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "year": {
+          "type": "string",
+          "pattern": "\\d{1,4}"
+        },
+        "sequence": {
+          "type": "string",
+          "maxLength": 1,
+          "default": "b'00101'"
+        },
+        "photo": {
+          "type": "string"
+        },
+        "history": {
+          "type": "string",
+          "maxLength": 4294967295
+        },
+        "gender": {
+          "type": "string",
+          "enum": [
+            "X"
+          ]
+        },
+        "size": {
+          "type": "string"
+        },
+        "where": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "neighbors": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        }
+      },
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "pet_id": {
+          "$ref": "#/definitions/pet_id"
+        },
+        "coordx": {
+          "$ref": "#/definitions/coordx"
+        },
+        "coordy": {
+          "$ref": "#/definitions/coordy"
+        },
+        "letter": {
+          "$ref": "#/definitions/letter"
+        },
+        "is_built": {
+          "$ref": "#/definitions/is_built"
+        },
+        "is_apartment": {
+          "$ref": "#/definitions/is_apartment"
+        },
+        "updated_at": {
+          "$ref": "#/definitions/updated_at"
+        },
+        "year": {
+          "$ref": "#/definitions/year"
+        },
+        "sequence": {
+          "$ref": "#/definitions/sequence"
+        },
+        "photo": {
+          "$ref": "#/definitions/photo"
+        },
+        "history": {
+          "$ref": "#/definitions/history"
+        },
+        "gender": {
+          "$ref": "#/definitions/gender"
+        },
+        "size": {
+          "$ref": "#/definitions/size"
+        },
+        "where": {
+          "$ref": "#/definitions/where"
+        },
+        "street": {
+          "$ref": "#/definitions/street"
+        },
+        "neighbors": {
+          "$ref": "#/definitions/neighbors"
+        },
+        "city": {
+          "$ref": "#/definitions/city"
+        }
+      }
+    }
+  ]
+}

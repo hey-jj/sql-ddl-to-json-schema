@@ -1,0 +1,29 @@
+{
+  "group": "parser",
+  "spec": "alter-database",
+  "description": "Parser: Should alter test database with collation utf8_general_ci",
+  "jestKey": "Parser: Should alter test database with collation utf8_general_ci 1",
+  "query": "ALTER DATABASE test COLLATE utf8_general_ci;",
+  "value": {
+    "id": "MAIN",
+    "def": [
+      {
+        "id": "P_DDS",
+        "def": {
+          "id": "P_ALTER_DB",
+          "def": {
+            "database": "test",
+            "meta": [
+              {
+                "id": "O_ALTER_DB_SPEC",
+                "def": {
+                  "collation": "utf8_general_ci"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
