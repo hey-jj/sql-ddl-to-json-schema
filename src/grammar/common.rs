@@ -127,9 +127,7 @@ pub fn index_column_list(s: &mut Stream) -> Option<Vec<Value>> {
 /// Parse `P_INDEX_TYPE`: `USING (BTREE|HASH|RTREE)`.
 pub fn p_index_type(s: &mut Stream) -> Option<Value> {
     let save = s.pos();
-    if s.eat_keyword("USING").is_none() {
-        return None;
-    }
+    s.eat_keyword("USING")?;
     if !s.ws1() {
         s.set(save);
         return None;
@@ -206,9 +204,7 @@ pub fn index_options(s: &mut Stream) -> Vec<Value> {
 /// Parse `P_INDEX_ALGORITHM_OPTION`: `ALGORITHM ( __ | = ) (DEFAULT|INPLACE|COPY)`.
 pub fn p_index_algorithm_option(s: &mut Stream) -> Option<Value> {
     let save = s.pos();
-    if s.eat_keyword("ALGORITHM").is_none() {
-        return None;
-    }
+    s.eat_keyword("ALGORITHM")?;
     if !ws_or_equals(s) {
         s.set(save);
         return None;
@@ -228,9 +224,7 @@ pub fn p_index_algorithm_option(s: &mut Stream) -> Option<Value> {
 /// Parse `P_LOCK_OPTION`: `LOCK ( __ | = ) (DEFAULT|NONE|SHARED|EXCLUSIVE)`.
 pub fn p_lock_option(s: &mut Stream) -> Option<Value> {
     let save = s.pos();
-    if s.eat_keyword("LOCK").is_none() {
-        return None;
-    }
+    s.eat_keyword("LOCK")?;
     if !ws_or_equals(s) {
         s.set(save);
         return None;
@@ -489,9 +483,7 @@ pub fn column_definitions(s: &mut Stream) -> Vec<Value> {
 /// Parse `P_COLUMN_REFERENCE`.
 pub fn p_column_reference(s: &mut Stream) -> Option<Value> {
     let save = s.pos();
-    if s.eat_keyword("REFERENCES").is_none() {
-        return None;
-    }
+    s.eat_keyword("REFERENCES")?;
     if !s.ws1() {
         s.set(save);
         return None;
@@ -595,14 +587,12 @@ fn reference_action(s: &mut Stream) -> Option<String> {
     if let Some(v) = s.eat_keyword("CASCADE") {
         return Some(v);
     }
-    // SET NULL
+    // SET NULL or SET DEFAULT.
     if let Some(set) = s.eat_keyword("SET") {
-        let inner = s.pos();
         if s.ws1() {
             if let Some(null) = s.eat_keyword("NULL") {
                 return Some(format!("{} {}", set, null));
             }
-            s.set(inner);
             if let Some(def) = s.eat_keyword("DEFAULT") {
                 return Some(format!("{} {}", set, def));
             }

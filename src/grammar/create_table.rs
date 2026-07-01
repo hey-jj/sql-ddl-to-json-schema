@@ -116,18 +116,14 @@ fn p_create_table_like(s: &mut Stream) -> Option<Value> {
     } else {
         s.set(save);
         s.ws0();
-        if s.eat(&TokenKind::LParens).is_none() {
-            return None;
-        }
+        s.eat(&TokenKind::LParens)?;
         s.ws0();
         if s.eat_keyword("LIKE").is_none() || !s.ws1() {
             return None;
         }
         like = s_identifier(s)?;
         s.ws0();
-        if s.eat(&TokenKind::RParens).is_none() {
-            return None;
-        }
+        s.eat(&TokenKind::RParens)?;
     }
 
     if !s_eos(s) {
@@ -143,9 +139,7 @@ fn p_create_table_like(s: &mut Stream) -> Option<Value> {
 /// Parse `( def (, def)* )`.
 fn p_create_table_create_definitions(s: &mut Stream) -> Option<Value> {
     let save = s.pos();
-    if s.eat(&TokenKind::LParens).is_none() {
-        return None;
-    }
+    s.eat(&TokenKind::LParens)?;
     s.ws0();
     let first = match o_create_table_create_definition(s) {
         Some(d) => d,
@@ -327,9 +321,7 @@ fn constraint_name(c: Constraint) -> Value {
 
 fn def_primary_key(s: &mut Stream) -> Option<Value> {
     let constraint = opt_constraint_full(s, "PRIMARY");
-    if s.eat_keyword("PRIMARY").is_none() {
-        return None;
-    }
+    s.eat_keyword("PRIMARY")?;
     if !s.ws1() || s.eat_keyword("KEY").is_none() {
         return None;
     }
@@ -347,16 +339,17 @@ fn def_primary_key(s: &mut Stream) -> Option<Value> {
 }
 
 fn def_index(s: &mut Stream) -> Option<Value> {
-    if one_of_keywords(s, &["INDEX", "KEY"]).is_none() {
-        return None;
-    }
+    one_of_keywords(s, &["INDEX", "KEY"])?;
     let name = opt_ws_ident(s);
     let index = opt_index_type(s);
     let columns = index_column_list(s)?;
     let options = index_options(s);
 
     let mut idx = Map::new();
-    idx.insert("name".into(), name.map(Value::String).unwrap_or(Value::Null));
+    idx.insert(
+        "name".into(),
+        name.map(Value::String).unwrap_or(Value::Null),
+    );
     idx.insert("index".into(), index.unwrap_or(Value::Null));
     idx.insert("columns".into(), Value::Array(columns));
     idx.insert("options".into(), Value::Array(options));
@@ -367,9 +360,7 @@ fn def_unique_key(s: &mut Stream) -> Option<Value> {
     // The constraint prefix is consumed but its name is not used here. The
     // unique key name comes from the index identifier after UNIQUE.
     let _constraint = opt_constraint_full(s, "UNIQUE");
-    if s.eat_keyword("UNIQUE").is_none() {
-        return None;
-    }
+    s.eat_keyword("UNIQUE")?;
     // The `( __ INDEX | __ KEY )?` optional prefers its absent branch, so the
     // word index or key is read as the identifier first and the parse only
     // consumes the keyword branch when the identifier branch cannot continue.
@@ -427,9 +418,7 @@ fn unique_key_tail(s: &mut Stream, consume_kw: bool) -> Option<UniqueTail> {
 }
 
 fn def_fulltext(s: &mut Stream) -> Option<Value> {
-    if s.eat_keyword("FULLTEXT").is_none() {
-        return None;
-    }
+    s.eat_keyword("FULLTEXT")?;
     let save = s.pos();
     if s.ws1() && one_of_keywords(s, &["INDEX", "KEY"]).is_some() {
         // consumed
@@ -456,9 +445,7 @@ fn def_fulltext(s: &mut Stream) -> Option<Value> {
 }
 
 fn def_spatial(s: &mut Stream) -> Option<Value> {
-    if s.eat_keyword("SPATIAL").is_none() {
-        return None;
-    }
+    s.eat_keyword("SPATIAL")?;
     let save = s.pos();
     if s.ws1() && one_of_keywords(s, &["INDEX", "KEY"]).is_some() {
         // consumed
@@ -486,9 +473,7 @@ fn def_spatial(s: &mut Stream) -> Option<Value> {
 
 fn def_foreign_key(s: &mut Stream) -> Option<Value> {
     let constraint = opt_constraint_full(s, "FOREIGN");
-    if s.eat_keyword("FOREIGN").is_none() {
-        return None;
-    }
+    s.eat_keyword("FOREIGN")?;
     if !s.ws1() || s.eat_keyword("KEY").is_none() {
         return None;
     }
@@ -743,10 +728,7 @@ fn o_create_table_option(s: &mut Stream) -> Option<Value> {
                 let mut obj = Map::new();
                 obj.insert("tablespaceName".into(), Value::String(name));
                 let stsave = s.pos();
-                if s.ws1()
-                    && s.eat_keyword("STORAGE").is_some()
-                    && s.ws1()
-                {
+                if s.ws1() && s.eat_keyword("STORAGE").is_some() && s.ws1() {
                     if let Some(v) = one_of_keywords(s, &["DISK", "MEMORY", "DEFAULT"]) {
                         obj.insert("tablespaceStorage".into(), Value::String(v));
                     } else {
@@ -893,9 +875,7 @@ fn number_or_default(s: &mut Stream) -> Option<Value> {
 /// Parse `( ident (, ident)* )`.
 fn ident_list_parens(s: &mut Stream) -> Option<Vec<String>> {
     let save = s.pos();
-    if s.eat(&TokenKind::LParens).is_none() {
-        return None;
-    }
+    s.eat(&TokenKind::LParens)?;
     s.ws0();
     let first = match s_identifier(s) {
         Some(v) => v,

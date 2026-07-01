@@ -36,6 +36,11 @@ impl<'a> Stream<'a> {
         self.tokens.get(self.pos)
     }
 
+    /// Peek at the token at an absolute position.
+    pub fn at(&self, pos: usize) -> Option<&Token> {
+        self.tokens.get(pos)
+    }
+
     /// Consume the current token.
     pub fn bump(&mut self) -> Option<&Token> {
         let t = self.tokens.get(self.pos);

@@ -36,7 +36,11 @@ pub fn parse_statement(input: &str) -> Result<Value, ParseError> {
     s.ws0();
     let inner = match dispatch(&mut s) {
         Some(v) => v,
-        None => return Err(ParseError { line: line_at(&tokens, s.pos()) }),
+        None => {
+            return Err(ParseError {
+                line: line_at(&tokens, s.pos()),
+            })
+        }
     };
     s.ws0();
 

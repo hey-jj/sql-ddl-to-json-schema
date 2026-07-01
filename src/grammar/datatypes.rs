@@ -114,7 +114,14 @@ pub fn o_datatype(s: &mut Stream) -> Option<Value> {
 fn integer(s: &mut Stream) -> Option<Value> {
     let datatype = one_of_keywords(
         s,
-        &["INT", "INTEGER", "TINYINT", "SMALLINT", "MEDIUMINT", "BIGINT"],
+        &[
+            "INT",
+            "INTEGER",
+            "TINYINT",
+            "SMALLINT",
+            "MEDIUMINT",
+            "BIGINT",
+        ],
     )?;
     let display_width = opt_paren_number(s);
     let mut def = Map::new();

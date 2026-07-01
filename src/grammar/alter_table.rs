@@ -156,13 +156,22 @@ fn o_alter_table_spec(s: &mut Stream) -> Option<Value> {
     None
 }
 
-/// Optional `COLUMN __`. The caller has already consumed the leading
-/// whitespace. Used by ALTER, CHANGE, MODIFY, and DROP column rules.
-fn opt_column(s: &mut Stream) {
+/// Consume `COLUMN __` when `consume` is set. The caller has already consumed
+/// the leading whitespace. Returns whether the branch matched.
+///
+/// The source optional `( COLUMN __ )?` prefers its absent branch, so callers
+/// try `consume = false` first and only retry with `consume = true` when the
+/// rest of the rule cannot parse.
+fn opt_column_branch(s: &mut Stream, consume: bool) -> bool {
+    if !consume {
+        return true;
+    }
     let save = s.pos();
     if s.eat_keyword("COLUMN").is_some() && s.ws1() {
+        true
     } else {
         s.set(save);
+        false
     }
 }
 
@@ -208,9 +217,7 @@ fn opt_index_type(s: &mut Stream) -> Option<Value> {
 /// how the source backtracks when the name would swallow the type keyword.
 fn opt_constraint(s: &mut Stream, next: &str) -> Option<String> {
     let save = s.pos();
-    if s.eat_keyword("CONSTRAINT").is_none() {
-        return None;
-    }
+    s.eat_keyword("CONSTRAINT")?;
     // Try with a name.
     let with_name = s.pos();
     if s.ws1() {
@@ -269,9 +276,7 @@ fn opt_reference(s: &mut Stream) -> Option<Value> {
 }
 
 fn add_column(s: &mut Stream) -> Option<Value> {
-    if s.eat_keyword("ADD").is_none() {
-        return None;
-    }
+    s.eat_keyword("ADD")?;
     opt_ws_column(s);
     if !s.ws1() {
         return None;
@@ -298,14 +303,10 @@ fn add_column(s: &mut Stream) -> Option<Value> {
 }
 
 fn add_columns(s: &mut Stream) -> Option<Value> {
-    if s.eat_keyword("ADD").is_none() {
-        return None;
-    }
+    s.eat_keyword("ADD")?;
     opt_ws_column(s);
     s.ws0();
-    if s.eat(&TokenKind::LParens).is_none() {
-        return None;
-    }
+    s.eat(&TokenKind::LParens)?;
     s.ws0();
     // First column.
     let first = add_columns_item(s)?;
@@ -327,9 +328,7 @@ fn add_columns(s: &mut Stream) -> Option<Value> {
         }
     }
     s.ws0();
-    if s.eat(&TokenKind::RParens).is_none() {
-        return None;
-    }
+    s.eat(&TokenKind::RParens)?;
     Some(json!({
         "action": "addColumns",
         "columns": columns
@@ -358,9 +357,7 @@ fn add_index(s: &mut Stream) -> Option<Value> {
     if s.eat_keyword("ADD").is_none() || !s.ws1() {
         return None;
     }
-    if one_of_keywords(s, &["INDEX", "KEY"]).is_none() {
-        return None;
-    }
+    one_of_keywords(s, &["INDEX", "KEY"])?;
     let name = opt_ws_ident(s);
     let index = opt_index_type(s);
     let columns = index_column_list(s)?;
@@ -401,9 +398,7 @@ fn add_unique_key(s: &mut Stream) -> Option<Value> {
         return None;
     }
     let constraint = opt_constraint(s, "UNIQUE");
-    if s.eat_keyword("UNIQUE").is_none() {
-        return None;
-    }
+    s.eat_keyword("UNIQUE")?;
     // Optional __ INDEX | __ KEY.
     let sp = s.pos();
     if s.ws1() && one_of_keywords(s, &["INDEX", "KEY"]).is_some() {
@@ -520,9 +515,7 @@ fn add_foreign_key(s: &mut Stream) -> Option<Value> {
 }
 
 fn algorithm(s: &mut Stream) -> Option<Value> {
-    if s.eat_keyword("ALGORITHM").is_none() {
-        return None;
-    }
+    s.eat_keyword("ALGORITHM")?;
     if !ws_or_equals(s) {
         return None;
     }
@@ -530,11 +523,61 @@ fn algorithm(s: &mut Stream) -> Option<Value> {
     Some(json!({ "action": "changeAlgorithm", "algorithm": v }))
 }
 
+/// Try a rule body with COLUMN absent, then with COLUMN consumed.
+///
+/// The absent branch is only accepted when the statement can continue after it,
+/// meaning the next token is a comma or the end of the statement. This mirrors
+/// how the source keeps only the parse that consumes the whole statement.
+fn try_both_column<F>(s: &mut Stream, body: F) -> Option<Value>
+where
+    F: Fn(&mut Stream, bool) -> Option<Value>,
+{
+    let save = s.pos();
+    if let Some(v) = body(s, false) {
+        if statement_can_continue(s) {
+            return Some(v);
+        }
+    }
+    s.set(save);
+    let v = body(s, true);
+    if v.is_none() {
+        s.set(save);
+    }
+    v
+}
+
+/// Whether the current position can end an alter spec: a comma or the end of
+/// statement (optional whitespace then a semicolon or end of input).
+fn statement_can_continue(s: &Stream) -> bool {
+    let mut pos = s.pos();
+    // Skip whitespace tokens.
+    while let Some(crate::lexer::Token {
+        kind: crate::lexer::TokenKind::Ws,
+        ..
+    }) = s.at(pos)
+    {
+        pos += 1;
+    }
+    match s.at(pos) {
+        None => true,
+        Some(t) => matches!(
+            t.kind,
+            crate::lexer::TokenKind::Comma | crate::lexer::TokenKind::Semicolon
+        ),
+    }
+}
+
 fn set_default(s: &mut Stream) -> Option<Value> {
+    try_both_column(s, set_default_body)
+}
+
+fn set_default_body(s: &mut Stream, consume_column: bool) -> Option<Value> {
     if s.eat_keyword("ALTER").is_none() || !s.ws1() {
         return None;
     }
-    opt_column(s);
+    if !opt_column_branch(s, consume_column) {
+        return None;
+    }
     let column = s_identifier(s)?;
     if !s.ws1() || s.eat_keyword("SET").is_none() || !s.ws1() || s.eat_keyword("DEFAULT").is_none()
     {
@@ -552,10 +595,16 @@ fn set_default(s: &mut Stream) -> Option<Value> {
 }
 
 fn drop_default(s: &mut Stream) -> Option<Value> {
+    try_both_column(s, drop_default_body)
+}
+
+fn drop_default_body(s: &mut Stream, consume_column: bool) -> Option<Value> {
     if s.eat_keyword("ALTER").is_none() || !s.ws1() {
         return None;
     }
-    opt_column(s);
+    if !opt_column_branch(s, consume_column) {
+        return None;
+    }
     let column = s_identifier(s)?;
     if !s.ws1() || s.eat_keyword("DROP").is_none() || !s.ws1() || s.eat_keyword("DEFAULT").is_none()
     {
@@ -568,10 +617,16 @@ fn drop_default(s: &mut Stream) -> Option<Value> {
 }
 
 fn change_column(s: &mut Stream) -> Option<Value> {
+    try_both_column(s, change_column_body)
+}
+
+fn change_column_body(s: &mut Stream, consume_column: bool) -> Option<Value> {
     if s.eat_keyword("CHANGE").is_none() || !s.ws1() {
         return None;
     }
-    opt_column(s);
+    if !opt_column_branch(s, consume_column) {
+        return None;
+    }
     let column = s_identifier(s)?;
     if !s.ws1() {
         return None;
@@ -599,10 +654,16 @@ fn change_column(s: &mut Stream) -> Option<Value> {
 }
 
 fn modify_column(s: &mut Stream) -> Option<Value> {
+    try_both_column(s, modify_column_body)
+}
+
+fn modify_column_body(s: &mut Stream, consume_column: bool) -> Option<Value> {
     if s.eat_keyword("MODIFY").is_none() || !s.ws1() {
         return None;
     }
-    opt_column(s);
+    if !opt_column_branch(s, consume_column) {
+        return None;
+    }
     let column = s_identifier(s)?;
     if !s.ws1() {
         return None;
@@ -656,7 +717,10 @@ fn convert_to_charset(s: &mut Stream) -> Option<Value> {
         s.set(sp);
     }
     let mut def = Map::new();
-    def.insert("action".into(), Value::String("convertToCharacterSet".into()));
+    def.insert(
+        "action".into(),
+        Value::String("convertToCharacterSet".into()),
+    );
     def.insert("charset".into(), Value::String(charset));
     // collate is a failed optional (null) when absent.
     def.insert(
@@ -706,11 +770,7 @@ fn drop_column(s: &mut Stream) -> Option<Value> {
     }
     // IF EXISTS __.
     let sp = s.pos();
-    if s.eat_keyword("IF").is_some()
-        && s.ws1()
-        && s.eat_keyword("EXISTS").is_some()
-        && s.ws1()
-    {
+    if s.eat_keyword("IF").is_some() && s.ws1() && s.eat_keyword("EXISTS").is_some() && s.ws1() {
     } else {
         s.set(sp);
     }
@@ -745,7 +805,8 @@ fn drop_foreign_key(s: &mut Stream) -> Option<Value> {
     if s.eat_keyword("DROP").is_none() || !s.ws1() {
         return None;
     }
-    if s.eat_keyword("FOREIGN").is_none() || !s.ws1() || s.eat_keyword("KEY").is_none() || !s.ws1() {
+    if s.eat_keyword("FOREIGN").is_none() || !s.ws1() || s.eat_keyword("KEY").is_none() || !s.ws1()
+    {
         return None;
     }
     let key = s_identifier(s)?;
@@ -760,9 +821,7 @@ fn force(s: &mut Stream) -> Option<Value> {
 }
 
 fn change_lock(s: &mut Stream) -> Option<Value> {
-    if s.eat_keyword("LOCK").is_none() {
-        return None;
-    }
+    s.eat_keyword("LOCK")?;
     if !ws_or_equals(s) {
         return None;
     }
@@ -850,21 +909,15 @@ fn add_period_for_system_time(s: &mut Stream) -> Option<Value> {
         return None;
     }
     s.ws0();
-    if s.eat(&TokenKind::LParens).is_none() {
-        return None;
-    }
+    s.eat(&TokenKind::LParens)?;
     s.ws0();
     let start = s_identifier(s)?;
     s.ws0();
-    if s.eat(&TokenKind::Comma).is_none() {
-        return None;
-    }
+    s.eat(&TokenKind::Comma)?;
     s.ws0();
     let end = s_identifier(s)?;
     s.ws0();
-    if s.eat(&TokenKind::RParens).is_none() {
-        return None;
-    }
+    s.eat(&TokenKind::RParens)?;
     Some(json!({
         "action": "addPeriodForSystemTime",
         "startColumnName": start,
@@ -890,7 +943,10 @@ fn insert_index_or_null(def: &mut Map<String, Value>, index: Option<Value>) {
 
 /// Insert an optional name, storing null when absent.
 fn insert_name_or_null(def: &mut Map<String, Value>, name: Option<String>) {
-    def.insert("name".into(), name.map(Value::String).unwrap_or(Value::Null));
+    def.insert(
+        "name".into(),
+        name.map(Value::String).unwrap_or(Value::Null),
+    );
 }
 
 /// Insert an optional position, storing null when absent.

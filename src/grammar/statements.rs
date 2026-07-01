@@ -15,9 +15,7 @@ use super::stream::Stream;
 /// Parse `P_CREATE_INDEX`.
 pub fn p_create_index(s: &mut Stream) -> Option<Value> {
     let save = s.pos();
-    if s.eat_keyword("CREATE").is_none() {
-        return None;
-    }
+    s.eat_keyword("CREATE")?;
     // OR REPLACE.
     let sp = s.pos();
     if s.ws1() && s.eat_keyword("OR").is_some() && s.ws1() && s.eat_keyword("REPLACE").is_some() {
@@ -248,11 +246,7 @@ pub fn p_create_db(s: &mut Stream) -> Option<Value> {
     }
     // OR REPLACE __.
     let sp = s.pos();
-    if s.eat_keyword("OR").is_some()
-        && s.ws1()
-        && s.eat_keyword("REPLACE").is_some()
-        && s.ws1()
-    {
+    if s.eat_keyword("OR").is_some() && s.ws1() && s.eat_keyword("REPLACE").is_some() && s.ws1() {
     } else {
         s.set(sp);
     }
