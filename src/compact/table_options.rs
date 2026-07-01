@@ -57,7 +57,11 @@ pub struct TableOptions {
 impl TableOptions {
     /// Build from a `P_CREATE_TABLE_OPTIONS` node.
     pub fn from_def(json: &Value) -> TableOptions {
-        TableOptions::from_array(json.get("def").and_then(Value::as_array).unwrap_or(&Vec::new()))
+        TableOptions::from_array(
+            json.get("def")
+                .and_then(Value::as_array)
+                .unwrap_or(&Vec::new()),
+        )
     }
 
     /// Build from an array of `O_CREATE_TABLE_OPTION` nodes.

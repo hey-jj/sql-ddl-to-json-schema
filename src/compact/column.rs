@@ -73,12 +73,18 @@ impl Column {
 
     /// Whether this column is a primary key by option.
     pub fn is_primary_key(&self) -> bool {
-        self.options.as_ref().map(|o| o.is_primary()).unwrap_or(false)
+        self.options
+            .as_ref()
+            .map(|o| o.is_primary())
+            .unwrap_or(false)
     }
 
     /// Whether this column is a unique key by option.
     pub fn is_unique_key(&self) -> bool {
-        self.options.as_ref().map(|o| o.is_unique()).unwrap_or(false)
+        self.options
+            .as_ref()
+            .map(|o| o.is_unique())
+            .unwrap_or(false)
     }
 
     /// Whether this column has a reference.

@@ -22,7 +22,11 @@ pub fn format(json: &Value) -> Result<Vec<Value>, String> {
                 .to_string(),
         );
     }
-    let dds = json.get("def").and_then(Value::as_array).cloned().unwrap_or_default();
+    let dds = json
+        .get("def")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
     let mut database = Database::new();
     database.parse_dds_collection(&dds);
     Ok(database.tables.iter().map(table::Table::to_json).collect())

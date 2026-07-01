@@ -120,7 +120,11 @@ impl Database {
     fn handle_drop_table(&mut self, json: &Value) {
         let names: Vec<String> = json["def"]
             .as_array()
-            .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+            .map(|a| {
+                a.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default();
         for name in names {
             let idx = match self.table_index(&name) {
@@ -310,7 +314,10 @@ impl Database {
         if options.is_autoincrement()
             && self.tables[idx].columns.iter().any(|c| {
                 c.name != column_name
-                    && c.options.as_ref().map(|o| o.is_autoincrement()).unwrap_or(false)
+                    && c.options
+                        .as_ref()
+                        .map(|o| o.is_autoincrement())
+                        .unwrap_or(false)
             })
         {
             return;

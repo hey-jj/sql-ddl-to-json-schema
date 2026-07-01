@@ -77,7 +77,10 @@ impl Table {
                 table.options = Some(TableOptions::from_def(opts));
             }
         }
-        let create_defs = def["columnsDef"]["def"].as_array().cloned().unwrap_or_default();
+        let create_defs = def["columnsDef"]["def"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
         for cd in &create_defs {
             let inner = &cd["def"];
             if defined(inner, "column") {
@@ -120,7 +123,12 @@ impl Table {
         if !self.unique_keys.is_empty() {
             m.insert(
                 "uniqueKeys".into(),
-                Value::Array(self.unique_keys.iter().map(KeyIndex::to_json_unique).collect()),
+                Value::Array(
+                    self.unique_keys
+                        .iter()
+                        .map(KeyIndex::to_json_unique)
+                        .collect(),
+                ),
             );
         }
         if !self.indexes.is_empty() {
@@ -165,7 +173,11 @@ impl Table {
             options: self.options.as_ref().map(TableOptions::clone_model),
             primary_key: self.primary_key.as_ref().map(PrimaryKey::clone_model),
             unique_keys: self.unique_keys.iter().map(KeyIndex::clone_model).collect(),
-            foreign_keys: self.foreign_keys.iter().map(ForeignKey::clone_model).collect(),
+            foreign_keys: self
+                .foreign_keys
+                .iter()
+                .map(ForeignKey::clone_model)
+                .collect(),
             fulltext_indexes: self
                 .fulltext_indexes
                 .iter()
@@ -183,7 +195,11 @@ impl Table {
     /// Get the index array holding an index of the given name, searching in the
     /// order unique, index, fulltext, spatial.
     pub fn get_index_kind_by_name(&self, name: &str) -> Option<IndexKind> {
-        if self.unique_keys.iter().any(|k| k.name.as_deref() == Some(name)) {
+        if self
+            .unique_keys
+            .iter()
+            .any(|k| k.name.as_deref() == Some(name))
+        {
             return Some(IndexKind::Unique);
         }
         if self.indexes.iter().any(|k| k.name.as_deref() == Some(name)) {
@@ -221,15 +237,21 @@ impl Table {
             .as_ref()
             .map(|o| o.is_autoincrement())
             .unwrap_or(false)
-            && self
-                .columns
-                .iter()
-                .any(|c| c.options.as_ref().map(|o| o.is_autoincrement()).unwrap_or(false))
+            && self.columns.iter().any(|c| {
+                c.options
+                    .as_ref()
+                    .map(|o| o.is_autoincrement())
+                    .unwrap_or(false)
+            })
         {
             return;
         }
         if self.primary_key.is_some()
-            && column.options.as_ref().map(|o| o.is_primary()).unwrap_or(false)
+            && column
+                .options
+                .as_ref()
+                .map(|o| o.is_primary())
+                .unwrap_or(false)
         {
             return;
         }

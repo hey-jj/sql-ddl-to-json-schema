@@ -31,8 +31,11 @@ impl Datatype {
             length: opt_field(inner, "length"),
             fractional: opt_field(inner, "fractional"),
             values: inner.get("values").and_then(|v| {
-                v.as_array()
-                    .map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect())
+                v.as_array().map(|a| {
+                    a.iter()
+                        .filter_map(|x| x.as_str().map(String::from))
+                        .collect()
+                })
             }),
             binary_collation: inner.get("binaryCollation").and_then(Value::as_bool),
         };
@@ -47,8 +50,23 @@ impl Datatype {
     pub fn max_indexable_size(&self) -> i64 {
         let d = self.datatype.as_str();
         let non_indexable = [
-            "tinyint", "smallint", "mediumint", "int", "bigint", "decimal", "float", "double",
-            "bit", "boolean", "date", "time", "datetime", "timestamp", "year", "json", "uuid",
+            "tinyint",
+            "smallint",
+            "mediumint",
+            "int",
+            "bigint",
+            "decimal",
+            "float",
+            "double",
+            "bit",
+            "boolean",
+            "date",
+            "time",
+            "datetime",
+            "timestamp",
+            "year",
+            "json",
+            "uuid",
         ];
         if non_indexable.contains(&d) {
             return 0;
@@ -66,7 +84,15 @@ impl Datatype {
         if spatial.contains(&d) {
             return 0;
         }
-        let indexable = ["blob", "text", "char", "binary", "varchar", "nvarchar", "varbinary"];
+        let indexable = [
+            "blob",
+            "text",
+            "char",
+            "binary",
+            "varchar",
+            "nvarchar",
+            "varbinary",
+        ];
         if indexable.contains(&d) {
             return self.length.as_ref().and_then(Value::as_i64).unwrap_or(0);
         }
@@ -299,7 +325,10 @@ impl IndexOptions {
         for opt in opts {
             let def = &opt["def"];
             if is_defined(def.get("comment")) {
-                o.comment = def.get("comment").and_then(Value::as_str).map(|c| c.to_lowercase());
+                o.comment = def
+                    .get("comment")
+                    .and_then(Value::as_str)
+                    .map(|c| c.to_lowercase());
             }
             if is_defined(def.get("indexType")) {
                 o.index_type = def["indexType"]
@@ -314,7 +343,10 @@ impl IndexOptions {
                 o.parser = def.get("parser").and_then(Value::as_str).map(String::from);
             }
             if is_defined(def.get("algorithm")) {
-                o.algorithm = def.get("algorithm").and_then(Value::as_str).map(String::from);
+                o.algorithm = def
+                    .get("algorithm")
+                    .and_then(Value::as_str)
+                    .map(String::from);
             }
             if is_defined(def.get("lock")) {
                 o.lock = def.get("lock").and_then(Value::as_str).map(String::from);

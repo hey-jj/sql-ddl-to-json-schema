@@ -104,7 +104,10 @@ fn table_to_schema(table: &Value, options: JsonSchemaOptions) -> Value {
 /// Build a column schema from a compact column.
 fn column_to_schema(col: &Value, is_primary_key: bool) -> Value {
     let type_field = col.get("type").cloned().unwrap_or(Value::Null);
-    let datatype = type_field.get("datatype").and_then(Value::as_str).unwrap_or("");
+    let datatype = type_field
+        .get("datatype")
+        .and_then(Value::as_str)
+        .unwrap_or("");
     let options = col.get("options");
 
     let unsigned = options
@@ -113,11 +116,13 @@ fn column_to_schema(col: &Value, is_primary_key: bool) -> Value {
         == Some(true);
 
     // Column-level default: keep only null or non-empty string defaults.
-    let default = options.and_then(|o| o.get("default")).and_then(|d| match d {
-        Value::Null => Some(Value::Null),
-        Value::String(s) if !s.is_empty() => Some(Value::String(s.clone())),
-        _ => None,
-    });
+    let default = options
+        .and_then(|o| o.get("default"))
+        .and_then(|d| match d {
+            Value::Null => Some(Value::Null),
+            Value::String(s) if !s.is_empty() => Some(Value::String(s.clone())),
+            _ => None,
+        });
 
     // Column-level comment.
     let comment = options
@@ -178,8 +183,14 @@ fn datatype_schema(type_field: &Value, datatype: &str, unsigned: bool) -> Map<St
         "int" => set_int_range(&mut m, INT, unsigned),
         "bigint" => set_int_range(&mut m, BIGINT, unsigned),
         "decimal" | "float" => {
-            let digits = type_field.get("digits").and_then(Value::as_i64).unwrap_or(0);
-            let decimals = type_field.get("decimals").and_then(Value::as_i64).unwrap_or(0);
+            let digits = type_field
+                .get("digits")
+                .and_then(Value::as_i64)
+                .unwrap_or(0);
+            let decimals = type_field
+                .get("decimals")
+                .and_then(Value::as_i64)
+                .unwrap_or(0);
             let maximum = decimal_maximum(digits, decimals);
             m.insert("maximum".into(), number(maximum));
             if unsigned {
@@ -198,8 +209,14 @@ fn datatype_schema(type_field: &Value, datatype: &str, unsigned: bool) -> Map<St
             m.insert("format".into(), Value::String("date-time".into()));
         }
         "year" => {
-            let digits = type_field.get("digits").and_then(Value::as_i64).unwrap_or(0);
-            m.insert("pattern".into(), Value::String(format!("\\d{{1,{}}}", digits)));
+            let digits = type_field
+                .get("digits")
+                .and_then(Value::as_i64)
+                .unwrap_or(0);
+            m.insert(
+                "pattern".into(),
+                Value::String(format!("\\d{{1,{}}}", digits)),
+            );
         }
         "char" | "binary" | "varchar" | "nvarchar" | "varbinary" | "text" => {
             if let Some(len) = type_field.get("length") {
@@ -215,7 +232,11 @@ fn datatype_schema(type_field: &Value, datatype: &str, unsigned: bool) -> Map<St
             let vals: Vec<String> = type_field
                 .get("values")
                 .and_then(Value::as_array)
-                .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .map(|a| {
+                    a.iter()
+                        .filter_map(|v| v.as_str().map(String::from))
+                        .collect()
+                })
                 .unwrap_or_default();
             let opts = vals.join("|");
             m.insert(

@@ -372,7 +372,10 @@ fn has_all_columns(cols: &[IndexColumn], table: &Table) -> bool {
     let matched = table
         .columns_ref()
         .iter()
-        .filter(|tc| cols.iter().any(|ic| ic.column.as_deref() == Some(tc.name.as_str())))
+        .filter(|tc| {
+            cols.iter()
+                .any(|ic| ic.column.as_deref() == Some(tc.name.as_str()))
+        })
         .count();
     matched == cols.len()
 }
