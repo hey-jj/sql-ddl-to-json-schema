@@ -170,19 +170,7 @@ impl KeyIndex {
 
     /// Fill unset index column lengths from the table's datatypes.
     pub fn set_index_size_from_table(&mut self, table: &Table) {
-        for ic in &mut self.columns {
-            if ic.length.is_some() {
-                continue;
-            }
-            if let Some(name) = &ic.column {
-                if let Some(col) = table.get_column(name) {
-                    let size = col.datatype.max_indexable_size();
-                    if size > 0 {
-                        ic.length = Some(Value::from(size));
-                    }
-                }
-            }
-        }
+        set_index_size(&mut self.columns, table);
     }
 
     /// Rename a column.
@@ -309,19 +297,7 @@ impl ForeignKey {
 
     /// Fill unset index column lengths from the table's datatypes.
     pub fn set_index_size_from_table(&mut self, table: &Table) {
-        for ic in &mut self.columns {
-            if ic.length.is_some() {
-                continue;
-            }
-            if let Some(name) = &ic.column {
-                if let Some(col) = table.get_column(name) {
-                    let size = col.datatype.max_indexable_size();
-                    if size > 0 {
-                        ic.length = Some(Value::from(size));
-                    }
-                }
-            }
-        }
+        set_index_size(&mut self.columns, table);
     }
 
     /// Whether this key references the given table and column.
@@ -364,6 +340,23 @@ fn drop_col(cols: &mut Vec<IndexColumn>, name: &str) -> bool {
             true
         }
         None => false,
+    }
+}
+
+/// Fill unset index column lengths from the table's datatypes.
+fn set_index_size(cols: &mut [IndexColumn], table: &Table) {
+    for ic in cols {
+        if ic.length.is_some() {
+            continue;
+        }
+        if let Some(name) = &ic.column {
+            if let Some(col) = table.get_column(name) {
+                let size = col.datatype.max_indexable_size();
+                if size > 0 {
+                    ic.length = Some(Value::from(size));
+                }
+            }
+        }
     }
 }
 

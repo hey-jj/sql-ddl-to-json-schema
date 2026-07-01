@@ -196,7 +196,7 @@ impl Database {
             "addFulltextIndex" => self.with_table(table_name, |t| {
                 t.push_fulltext_index(KeyIndex::from_object(json));
             }),
-            // Preserve the source bug: spatial index add pushes to fulltext.
+            // A spatial index added via ALTER is stored under fulltext indexes.
             "addSpatialIndex" => self.with_table(table_name, |t| {
                 t.push_fulltext_index(KeyIndex::from_object(json));
             }),

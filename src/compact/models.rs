@@ -23,7 +23,7 @@ impl Datatype {
         // json.def.def holds the inner fields.
         let inner = &json["def"]["def"];
         let raw = get_str(inner, "datatype").unwrap_or("").to_string();
-        let mut dt = Datatype {
+        Datatype {
             datatype: filter_datatype(&raw),
             display_width: opt_field(inner, "displayWidth"),
             digits: opt_field(inner, "digits"),
@@ -38,12 +38,7 @@ impl Datatype {
                 })
             }),
             binary_collation: inner.get("binaryCollation").and_then(Value::as_bool),
-        };
-        // Clear values if the array was absent.
-        if inner.get("values").is_none() {
-            dt.values = None;
         }
-        dt
     }
 
     /// Length that is indexable by this datatype.

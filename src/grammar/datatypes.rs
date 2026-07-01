@@ -4,6 +4,7 @@ use serde_json::{json, Map, Value};
 
 use crate::lexer::TokenKind;
 
+use super::common::one_of_keywords;
 use super::helpers::s_number;
 use super::stream::Stream;
 
@@ -66,16 +67,6 @@ fn opt_paren_pair(s: &mut Stream) -> Option<(Value, Value)> {
         return None;
     }
     Some((d, n))
-}
-
-/// Consume one keyword from a list, returning its raw value.
-fn one_of_keywords(s: &mut Stream, names: &[&str]) -> Option<String> {
-    for name in names {
-        if let Some(v) = s.eat_keyword(name) {
-            return Some(v);
-        }
-    }
-    None
 }
 
 /// Wrap a datatype subnode in `{id:'O_DATATYPE', def:<sub>}`.
