@@ -5,15 +5,24 @@ use crate::lexer::{Token, TokenKind};
 /// A cursor over a token slice. Whitespace tokens stay in place so rules can
 /// require or allow them explicitly, matching the source grammar helpers `_`
 /// and `__`.
+///
+/// The cursor also keeps a high-water mark: the furthest position any rule
+/// reached, even after backtracking. Error reporting uses it to name the token
+/// where parsing broke rather than the statement start it rewound to.
 pub struct Stream<'a> {
     tokens: &'a [Token],
     pos: usize,
+    furthest: usize,
 }
 
 impl<'a> Stream<'a> {
     /// Build a cursor at the start of the tokens.
     pub fn new(tokens: &'a [Token]) -> Self {
-        Stream { tokens, pos: 0 }
+        Stream {
+            tokens,
+            pos: 0,
+            furthest: 0,
+        }
     }
 
     /// Current position, for save and restore.
@@ -21,9 +30,23 @@ impl<'a> Stream<'a> {
         self.pos
     }
 
-    /// Restore a saved position.
+    /// The furthest position reached, across all attempts including ones that
+    /// backtracked. This is the token where parsing broke.
+    pub fn furthest(&self) -> usize {
+        self.furthest
+    }
+
+    /// Restore a saved position. Does not lower the high-water mark.
     pub fn set(&mut self, pos: usize) {
         self.pos = pos;
+    }
+
+    /// Advance the cursor and raise the high-water mark if needed.
+    fn advance_to(&mut self, pos: usize) {
+        self.pos = pos;
+        if pos > self.furthest {
+            self.furthest = pos;
+        }
     }
 
     /// Whether the cursor is at end of input.
@@ -43,11 +66,12 @@ impl<'a> Stream<'a> {
 
     /// Consume the current token.
     pub fn bump(&mut self) -> Option<&Token> {
-        let t = self.tokens.get(self.pos);
-        if t.is_some() {
-            self.pos += 1;
+        if self.pos < self.tokens.len() {
+            self.advance_to(self.pos + 1);
+            self.tokens.get(self.pos - 1)
+        } else {
+            None
         }
-        t
     }
 
     /// Consume the current token if its kind matches, returning its value.
@@ -55,7 +79,7 @@ impl<'a> Stream<'a> {
         match self.tokens.get(self.pos) {
             Some(t) if &t.kind == kind => {
                 let v = t.value.clone();
-                self.pos += 1;
+                self.advance_to(self.pos + 1);
                 Some(v)
             }
             _ => None,
@@ -70,7 +94,7 @@ impl<'a> Stream<'a> {
                 value,
             }) if k == name => {
                 let v = value.clone();
-                self.pos += 1;
+                self.advance_to(self.pos + 1);
                 Some(v)
             }
             _ => None,
@@ -84,7 +108,7 @@ impl<'a> Stream<'a> {
             ..
         }) = self.tokens.get(self.pos)
         {
-            self.pos += 1;
+            self.advance_to(self.pos + 1);
         }
     }
 

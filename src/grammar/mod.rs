@@ -38,7 +38,7 @@ pub fn parse_statement(input: &str) -> Result<Value, ParseError> {
         Some(v) => v,
         None => {
             return Err(ParseError {
-                line: line_at(&tokens, s.pos()),
+                line: line_at(&tokens, s.furthest()),
             })
         }
     };
@@ -46,7 +46,7 @@ pub fn parse_statement(input: &str) -> Result<Value, ParseError> {
 
     if !s.at_end() {
         return Err(ParseError {
-            line: line_at(&tokens, s.pos()),
+            line: line_at(&tokens, s.furthest()),
         });
     }
 
@@ -79,7 +79,8 @@ fn dispatch(s: &mut Stream) -> Option<Value> {
 }
 
 /// Compute the 1-based line number at a token position by counting newlines in
-/// the values consumed up to that point.
+/// the token values before it. Callers pass the furthest position reached so
+/// the line names the token where parsing broke.
 fn line_at(tokens: &[Token], pos: usize) -> usize {
     let mut line = 1;
     for t in tokens.iter().take(pos) {
