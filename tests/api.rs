@@ -18,7 +18,7 @@ fn unsupported_dialect_errors() {
 
     // The message matches the documented text.
     let msg = err.to_string();
-    assert!(msg.contains("Unsupported SQL dialect given to parser: 'postgres."));
+    assert!(msg.contains("Unsupported SQL dialect given to parser: 'postgres'."));
     assert!(msg.contains("Please provide 'mysql', 'mariadb' or none to use default."));
 }
 

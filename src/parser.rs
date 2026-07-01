@@ -27,7 +27,7 @@ impl std::fmt::Display for Error {
         match self {
             Error::UnsupportedDialect(d) => write!(
                 f,
-                "Unsupported SQL dialect given to parser: '{}. Please provide 'mysql', 'mariadb' or none to use default.",
+                "Unsupported SQL dialect given to parser: '{}'. Please provide 'mysql', 'mariadb' or none to use default.",
                 d
             ),
             Error::Parse(m) => write!(f, "{}", m),
