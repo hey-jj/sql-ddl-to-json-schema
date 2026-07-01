@@ -5,7 +5,6 @@ use serde_json::{json, Map, Value};
 
 use crate::lexer::TokenKind;
 
-use super::datatypes::o_datatype;
 use super::helpers::{o_quoted_string, o_string_or_ident, s_identifier, s_number};
 use super::stream::Stream;
 
@@ -609,9 +608,4 @@ fn reference_action(s: &mut Stream) -> Option<String> {
         s.set(save);
     }
     None
-}
-
-/// Parse a datatype, requiring success. Used by column and add-column rules.
-pub fn require_datatype(s: &mut Stream) -> Option<Value> {
-    o_datatype(s)
 }

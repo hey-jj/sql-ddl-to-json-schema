@@ -6,8 +6,9 @@ use crate::lexer::TokenKind;
 
 use super::common::{
     column_definitions, index_column_list, index_options, one_of_keywords, p_column_reference,
-    p_index_type, require_datatype, ws_or_equals,
+    p_index_type, ws_or_equals,
 };
+use super::datatypes::o_datatype;
 use super::helpers::{o_quoted_string, o_string_or_ident, s_identifier, s_number};
 use super::stream::Stream;
 
@@ -244,7 +245,7 @@ fn opt_index_type(s: &mut Stream) -> Option<Value> {
 fn def_column(s: &mut Stream) -> Option<Value> {
     let name = s_identifier(s)?;
     s.ws0();
-    let datatype = require_datatype(s)?;
+    let datatype = o_datatype(s)?;
     let column_definition = column_definitions(s);
     // Optional reference.
     let mut reference = None;

@@ -6,9 +6,10 @@ use crate::lexer::TokenKind;
 
 use super::common::{
     column_definitions, index_column_list, index_options, o_default_value, one_of_keywords,
-    p_column_reference, p_index_type, require_datatype, ws_or_equals,
+    p_column_reference, p_index_type, ws_or_equals,
 };
 use super::create_table::{p_create_table_options, s_eos};
+use super::datatypes::o_datatype;
 use super::helpers::{s_identifier, s_number};
 use super::stream::Stream;
 
@@ -285,7 +286,7 @@ fn add_column(s: &mut Stream) -> Option<Value> {
     if !s.ws1() {
         return None;
     }
-    let datatype = require_datatype(s)?;
+    let datatype = o_datatype(s)?;
     let column_definition = column_definitions(s);
     let reference = opt_reference(s);
     let position = opt_position(s);
@@ -340,7 +341,7 @@ fn add_columns_item(s: &mut Stream) -> Option<Value> {
     if !s.ws1() {
         return None;
     }
-    let datatype = require_datatype(s)?;
+    let datatype = o_datatype(s)?;
     let column_definition = column_definitions(s);
     let reference = opt_reference(s);
     let mut obj = Map::new();
@@ -635,7 +636,7 @@ fn change_column_body(s: &mut Stream, consume_column: bool) -> Option<Value> {
     if !s.ws1() {
         return None;
     }
-    let datatype = require_datatype(s)?;
+    let datatype = o_datatype(s)?;
     let column_definition = column_definitions(s);
     let reference = opt_reference(s);
     let position = opt_position(s);
@@ -668,7 +669,7 @@ fn modify_column_body(s: &mut Stream, consume_column: bool) -> Option<Value> {
     if !s.ws1() {
         return None;
     }
-    let datatype = require_datatype(s)?;
+    let datatype = o_datatype(s)?;
     let column_definition = column_definitions(s);
     let reference = opt_reference(s);
     let position = opt_position(s);
