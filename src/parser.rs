@@ -70,6 +70,16 @@ pub struct Parser {
     remains: String,
     escaped: bool,
     quoted: Option<char>,
+    comment: Option<Comment>,
+    previous_unit: Option<u16>,
+    second_previous_unit: Option<u16>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Comment {
+    HashLine,
+    DashLine,
+    Block { previous_was_star: bool },
 }
 
 impl Parser {
@@ -84,6 +94,9 @@ impl Parser {
                 remains: String::new(),
                 escaped: false,
                 quoted: None,
+                comment: None,
+                previous_unit: None,
+                second_previous_unit: None,
             })
         } else {
             Err(Error::UnsupportedDialect(dialect.to_string()))
@@ -101,8 +114,28 @@ impl Parser {
         for (i, &unit) in units.iter().enumerate() {
             parsed.push(unit);
             let ch = char::from_u32(unit as u32);
+            let previous_unit = self.previous_unit;
+            let second_previous_unit = self.second_previous_unit;
 
-            if ch == Some('\\') {
+            if let Some(comment) = self.comment {
+                match comment {
+                    Comment::HashLine | Comment::DashLine => {
+                        if matches!(ch, Some('\n') | Some('\r')) {
+                            self.comment = None;
+                        }
+                    }
+                    Comment::Block { previous_was_star } => {
+                        if unit == b'/' as u16 && previous_was_star {
+                            self.comment = None;
+                        } else {
+                            self.comment = Some(Comment::Block {
+                                previous_was_star: unit == b'*' as u16,
+                            });
+                        }
+                    }
+                }
+                self.escaped = false;
+            } else if ch == Some('\\') {
                 self.escaped = !self.escaped;
             } else {
                 if !self.escaped && is_quote_char(ch) {
@@ -115,15 +148,31 @@ impl Parser {
                         }
                         None => self.quoted = Some(c),
                     }
-                } else if ch == Some(';') && self.quoted.is_none() {
-                    let slice = &parsed[last_statement_index..i + 1];
-                    let statement = format!("{}{}", self.remains, utf16_to_string(slice));
-                    self.statements.push(statement);
-                    self.remains.clear();
-                    last_statement_index = i + 1;
+                } else if self.quoted.is_none() {
+                    if ch == Some('#') {
+                        self.comment = Some(Comment::HashLine);
+                    } else if second_previous_unit == Some(b'-' as u16)
+                        && previous_unit == Some(b'-' as u16)
+                        && unit == b' ' as u16
+                    {
+                        self.comment = Some(Comment::DashLine);
+                    } else if previous_unit == Some(b'/' as u16) && unit == b'*' as u16 {
+                        self.comment = Some(Comment::Block {
+                            previous_was_star: false,
+                        });
+                    } else if ch == Some(';') {
+                        let slice = &parsed[last_statement_index..i + 1];
+                        let statement = format!("{}{}", self.remains, utf16_to_string(slice));
+                        self.statements.push(statement);
+                        self.remains.clear();
+                        last_statement_index = i + 1;
+                    }
                 }
                 self.escaped = false;
             }
+
+            self.second_previous_unit = previous_unit;
+            self.previous_unit = Some(unit);
         }
 
         let tail = &parsed[last_statement_index..];
@@ -171,6 +220,9 @@ impl Parser {
                     self.remains.clear();
                     self.escaped = false;
                     self.quoted = None;
+                    self.comment = None;
+                    self.previous_unit = None;
+                    self.second_previous_unit = None;
                     return Err(Error::Parse(format!(
                         "invalid syntax at line {}",
                         new_count
@@ -182,6 +234,9 @@ impl Parser {
         self.remains.clear();
         self.escaped = false;
         self.quoted = None;
+        self.comment = None;
+        self.previous_unit = None;
+        self.second_previous_unit = None;
 
         Ok(json!({ "id": "MAIN", "def": results }))
     }
@@ -367,5 +422,36 @@ mod tests {
         let mut p = Parser::new("mysql").unwrap();
         p.feed("USE \u{1F600};USE b;");
         assert_eq!(p.statements.len(), 2);
+    }
+
+    #[test]
+    fn semicolon_in_block_comment_does_not_split_statement() {
+        let mut p = Parser::new("mysql").unwrap();
+        p.feed("CREATE TABLE c (id INT /* ; */);");
+
+        let tables = p.parse_compact().unwrap();
+
+        assert_eq!(tables[0]["name"], "c");
+    }
+
+    #[test]
+    fn comment_semicolons_do_not_split_at_chunk_boundaries() {
+        let scenarios: &[&[&str]] = &[
+            &["CREATE TABLE c (id INT /", "* ; *", "/);"],
+            &["CREATE TABLE c (id INT) -", "- ;\n;"],
+            &["CREATE TABLE c (id INT /*/ ; */);"],
+            &["CREATE TABLE c (id INT /* ; *", "/);"],
+        ];
+
+        for chunks in scenarios {
+            let mut p = Parser::new("mysql").unwrap();
+            for chunk in *chunks {
+                p.feed(chunk);
+            }
+
+            let tables = p.parse_compact().unwrap();
+
+            assert_eq!(tables[0]["name"], "c");
+        }
     }
 }
