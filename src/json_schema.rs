@@ -234,7 +234,7 @@ fn datatype_schema(type_field: &Value, datatype: &str, unsigned: bool) -> Map<St
                 .and_then(Value::as_array)
                 .map(|a| {
                     a.iter()
-                        .filter_map(|v| v.as_str().map(String::from))
+                        .filter_map(|v| v.as_str().map(escape_regex_literal))
                         .collect()
                 })
                 .unwrap_or_default();
@@ -264,6 +264,20 @@ fn filter_type(datatype: &str) -> &'static str {
         "boolean" => "boolean",
         _ => "string",
     }
+}
+
+fn escape_regex_literal(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if matches!(
+            ch,
+            '\\' | '^' | '$' | '.' | '|' | '?' | '*' | '+' | '(' | ')' | '[' | ']' | '{' | '}'
+        ) {
+            escaped.push('\\');
+        }
+        escaped.push(ch);
+    }
+    escaped
 }
 
 /// Set the minimum and maximum for an integer type.
@@ -297,5 +311,33 @@ fn number(f: f64) -> Value {
         serde_json::Number::from_f64(f)
             .map(Value::Number)
             .unwrap_or(Value::Null)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn set_pattern_escapes_literal_values() {
+        let tables = vec![json!({
+            "name": "j",
+            "columns": [{
+                "name": "c",
+                "type": {
+                    "datatype": "set",
+                    "values": ["a.b"]
+                }
+            }]
+        })];
+
+        let schemas = format(&tables, JsonSchemaOptions { use_ref: false });
+
+        assert_eq!(
+            schemas[0]["properties"]["c"]["pattern"],
+            "^(a\\.b)(,(a\\.b))*$"
+        );
     }
 }
