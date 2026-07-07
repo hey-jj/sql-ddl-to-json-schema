@@ -196,9 +196,8 @@ impl Database {
             "addFulltextIndex" => self.with_table(table_name, |t| {
                 t.push_fulltext_index(KeyIndex::from_object(json));
             }),
-            // A spatial index added via ALTER is stored under fulltext indexes.
             "addSpatialIndex" => self.with_table(table_name, |t| {
-                t.push_fulltext_index(KeyIndex::from_object(json));
+                t.push_spatial_index(KeyIndex::from_object(json));
             }),
             "addForeignKey" => self.with_table(table_name, |t| {
                 t.push_foreign_key(ForeignKey::from_object(json));
@@ -518,5 +517,26 @@ fn read_position(pos: Option<&Value>) -> Option<Position> {
         Some(Value::Null) => Some(Position::First),
         Some(Value::String(s)) => Some(Position::After(s.clone())),
         _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Parser;
+
+    #[test]
+    fn alter_add_spatial_index_uses_spatial_indexes() {
+        let mut parser = Parser::new("mysql").unwrap();
+        parser.feed(
+            "CREATE TABLE t (g GEOMETRY);
+             ALTER TABLE t ADD SPATIAL INDEX sg (g);",
+        );
+
+        let tables = parser.parse_compact().unwrap();
+        let table = &tables[0];
+
+        assert_eq!(table["spatialIndexes"][0]["name"], "sg");
+        assert_eq!(table["spatialIndexes"][0]["columns"][0]["column"], "g");
+        assert!(table.get("fulltextIndexes").is_none());
     }
 }

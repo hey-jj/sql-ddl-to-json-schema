@@ -266,15 +266,7 @@
           }
         }
       ],
-      "fulltextIndexes": [
-        {
-          "columns": [
-            {
-              "column": "initials"
-            }
-          ],
-          "name": "fi_initials"
-        },
+      "spatialIndexes": [
         {
           "columns": [
             {
@@ -294,6 +286,16 @@
             "comment": "spatial formatter test",
             "parser": "spatialParser"
           }
+        }
+      ],
+      "fulltextIndexes": [
+        {
+          "columns": [
+            {
+              "column": "initials"
+            }
+          ],
+          "name": "fi_initials"
         }
       ],
       "options": {
@@ -557,7 +559,7 @@
           "name": "i_birth"
         }
       ],
-      "fulltextIndexes": [
+      "spatialIndexes": [
         {
           "columns": [
             {
