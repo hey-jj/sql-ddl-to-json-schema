@@ -659,13 +659,14 @@ pub fn p_set(s: &mut Stream) -> Option<Value> {
                 | TokenKind::Comma
                 | TokenKind::BitFormat
                 | TokenKind::HexaFormat
+                | TokenKind::DQuoteString
+                | TokenKind::SQuoteString
                 | TokenKind::Number => {
                     s.bump();
                     consumed_any = true;
                 }
-                TokenKind::Semicolon | TokenKind::DQuoteString | TokenKind::SQuoteString => {
-                    // Semicolon handled above. Strings are not in the SET body
-                    // alternation, so stop.
+                TokenKind::Semicolon => {
+                    // Semicolon handled above.
                     s.set(save);
                     return None;
                 }
@@ -699,4 +700,16 @@ pub fn p_use_db(s: &mut Stream) -> Option<Value> {
         "id": "P_USE_DB",
         "def": { "database": db }
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::parse_statement;
+
+    #[test]
+    fn set_accepts_quoted_string_assignment() {
+        let parsed = parse_statement("SET sql_mode='ANSI';").unwrap();
+
+        assert_eq!(parsed["def"]["id"], "P_SET");
+    }
 }
