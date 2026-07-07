@@ -302,6 +302,9 @@ impl Table {
             None => return false,
         };
         if let Position::After(after) = position {
+            if after == column_name {
+                return false;
+            }
             if !self.columns.iter().any(|c| c.name == *after) {
                 return false;
             }
@@ -458,4 +461,42 @@ impl Table {
 /// Whether a create-definition inner object defines the given key.
 fn defined(inner: &Value, key: &str) -> bool {
     matches!(inner.get(key), Some(v) if !v.is_null())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::column::Column;
+    use super::super::models::Datatype;
+    use super::{Position, Table};
+
+    fn column(name: &str) -> Column {
+        Column {
+            name: name.to_string(),
+            datatype: Datatype {
+                datatype: "int".to_string(),
+                display_width: None,
+                digits: None,
+                decimals: None,
+                length: None,
+                fractional: None,
+                values: None,
+                binary_collation: None,
+            },
+            reference: None,
+            options: None,
+        }
+    }
+
+    #[test]
+    fn move_column_after_itself_returns_false() {
+        let mut table = Table {
+            name: "m".to_string(),
+            columns: vec![column("c"), column("d")],
+            ..Default::default()
+        };
+
+        assert!(!table.move_column("c", &Position::After("c".to_string())));
+        assert_eq!(table.columns_ref()[0].name, "c");
+        assert_eq!(table.columns_ref()[1].name, "d");
+    }
 }
