@@ -1,6 +1,6 @@
 [package]
 name = "sql-ddl-to-json-schema"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 rust-version = "1.74"
 description = "Parse MySQL and MariaDB DDL into a compact table model and JSON Schema draft-07 documents"
