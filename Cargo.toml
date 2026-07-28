@@ -1,8 +1,8 @@
 [package]
 name = "sql-ddl-to-json-schema"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.85.0"
 description = "Parse MySQL and MariaDB DDL into a compact table model and JSON Schema draft-07 documents"
 license = "MIT"
 repository = "https://github.com/hey-jj/sql-ddl-to-json-schema"

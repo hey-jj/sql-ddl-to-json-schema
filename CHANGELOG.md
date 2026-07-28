@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] - 2026-07-28
+
+### Fixed
+- Corrected `rust-version` from 1.74 to 1.85.0. The declared floor was never reachable: the
+  `preserve_order` feature this crate requests from `serde_json` pulls in `indexmap`, which requires
+  Rust 1.85.0. Builds on 0.1.0 and 0.2.0 fail below that despite the metadata. No code changed.
+
 ## [0.2.0] - 2026-07-07
 
 ### Changed
