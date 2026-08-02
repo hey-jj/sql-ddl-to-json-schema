@@ -86,12 +86,13 @@ use the same grammar. Any other value returns `Error::UnsupportedDialect`.
 
 ## Datatype mapping
 
-Integer types map to `integer` with `minimum` and `maximum` from the MySQL
-ranges. `bigint` uses the JavaScript safe-integer range
-(`+/- 9007199254740991`). `decimal` and `float` compute `maximum` from the digit
-and decimal counts. `date`, `time`, and `datetime` map to the draft-07 `format`
-values. `enum` maps to `enum`, `set` to a `pattern`, `uuid` to a `pattern`, and
-`year` to a digit-count `pattern`.
+- Integer types map to `integer` with `minimum` and `maximum` from the MySQL
+  ranges. `bigint` uses the JavaScript safe-integer range
+  (`+/- 9007199254740991`).
+- `decimal` and `float` compute `maximum` from the digit and decimal counts.
+- `date`, `time`, and `datetime` map to the draft-07 `format` values.
+- `enum` maps to `enum`.
+- `set` and `uuid` map to a `pattern`. `year` maps to a digit-count `pattern`.
 
 ## Output types
 
